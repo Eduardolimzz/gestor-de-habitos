@@ -57,6 +57,7 @@ npx expo start
 ```
 
 ## Integrantes do Grupo
+```
 |          Nome        |   Matrícula          |
 |Guilherme Ferreira de Souza        2412130057|
 |Heitor dos Santos Ribeiro          2412130143|
@@ -64,3 +65,4 @@ npx expo start
 |Eduardo Lima dos Santos            2412130074|
 |Vitor Alexandre Pereira da Silva   2312130217|
 |Emanuel Nunes Almeida              2412130094|
+```
