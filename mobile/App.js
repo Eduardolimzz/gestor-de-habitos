@@ -1,9 +1,8 @@
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+
+// screens
+import Login from './src/screens/Login';
 
 export default function App() {
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Gestor de Hábitos</Text>
-    </View>
-  );
+  return <Login />;
 }
