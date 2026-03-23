@@ -36,7 +36,7 @@ export const TopRow = styled.View`
 `;
 
 export const PageTitle = styled.Text`
-  font-size: 23px;
+  font-size: 28px;
   font-weight: bold;
   color: ${brand};
 `;
@@ -93,4 +93,51 @@ export const TextLinkContent = styled.Text`
   color: ${brand};
   font-weight: bold;
   margin-top: -40px;
+`;
+export const SignupContainer = styled.View`
+  flex: 1;
+  padding: 25px;
+  padding-top: ${StatusBarHeight + 10}px;
+  background-color: ${secondary};
+`;
+
+export const SignupTitleBlock = styled.View`
+  margin-top: 55px;
+  width: 100%;
+`;
+
+export const SignupTitle = styled.Text`
+  font-size: 24px;
+  font-weight: bold;
+  color: ${brand};
+`;
+
+export const SignupSubLink = styled.TouchableOpacity`
+  align-self: flex-end;
+  margin-top: 6px;
+`;
+
+export const FieldLabel = styled.Text`
+  font-size: 14px;
+  color: ${terciary};
+  margin-bottom: 6px;
+  margin-top: 4px;
+`;
+
+export const SignupFormArea = styled.View`
+  width: 100%;
+  margin-top: 30px;
+`;
+
+export const GoogleIconButton = styled.TouchableOpacity`
+  background-color: ${secondary};
+  padding: 18px;
+  border-radius: 14px;
+  align-items: center;
+  margin-top: 15px;
+  shadow-color: #000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.08;
+  shadow-radius: 6px;
+  elevation: 3;
 `;

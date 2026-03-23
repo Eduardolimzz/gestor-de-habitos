@@ -17,16 +17,14 @@ import {
   TopRow,
 } from "../components/styles";
 
-const Login = () => {
+const Login = ({ navigation }) => {
   return (
     <StyledContainer>
       <StatusBar style="dark" />
-
       <InnerContainer>
         <TopRow>
           <PageTitle>ENTRAR</PageTitle>
-
-          <TextLink>
+          <TextLink onPress={() => navigation.navigate('Signup')}>
             <TextLinkContent>Cadastre-se →</TextLinkContent>
           </TextLink>
         </TopRow>
