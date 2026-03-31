@@ -31,7 +31,7 @@ const Login = ({ navigation }) => {
       });
 
       Alert.alert('Sucesso', 'Login realizado!');
-      navigation.navigate('Welcome'); // depois podemos trocar pra Habits
+      navigation.navigate('Main'); // depois podemos trocar pra Habits
 
     } catch (error) {
       Alert.alert('Erro', error.response?.data?.message || 'Erro ao logar');

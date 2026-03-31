@@ -141,3 +141,123 @@ export const GoogleIconButton = styled.TouchableOpacity`
   shadow-radius: 6px;
   elevation: 3;
 `;
+
+// CONTAINER HOME
+export const HomeContainer = styled.View`
+  flex: 1;
+  padding: 20px;
+  background-color: #f8f9f9;
+`;
+
+// TOPO DA HOME
+export const TopSection = styled.View`
+  margin-bottom: 20px;
+`;
+
+// DATA DA HOME
+export const DateText = styled.Text`
+  font-size: 14px;
+  color: #777;
+`;
+
+// SAUDAÇÃO DA HOME
+export const GreetingText = styled.Text`
+  font-size: 24px;
+  font-weight: bold;
+  color: #27ae60;
+`;
+
+// CARD DA HOME
+export const ProgressCard = styled.View`
+  background-color: #2ecc71;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+`;
+
+// TEXTO CARD DA HOME
+export const CardTitle = styled.Text`
+  color: #ffffff;
+  font-size: 16px;
+`;
+
+export const ProgressText = styled.Text`
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: bold;
+`;
+
+// SEÇÃO DA HOME
+export const SectionTitle = styled.Text`
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #2ecc71;
+`;
+
+// ITEM HÁBITO DA HOME
+export const HabitItem = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #f4f6f6;
+  margin-bottom: 10px;
+`;
+
+//cria BOX
+export const HabitsContainer = styled.View`
+  background-color: #ffffff;
+  padding: 15px;
+  border-radius: 12px;
+
+  /* sombra (iOS) */
+  shadow-color: #000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.1;
+  shadow-radius: 4px;
+
+  /* sombra (Android) */
+  elevation: 3;
+`;
+
+export const HabitText = styled.Text`
+  color: #000;
+  font-size: 16px;
+`;
+
+export const HabitDoneText = styled.Text`
+  font-size: 16px;
+  color: #2ecc71;
+  text-decoration: line-through;
+`;
+
+export const Checkbox = styled.View`
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+
+  border: 2px solid #2ecc71;
+
+  align-items: center;
+  justify-content: center;
+`;
+
+
+export const CheckboxChecked = styled.View`
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+
+  background-color: #2ecc71;
+
+  align-items: center;
+  justify-content: center;
+`;
+
+export const CheckMark = styled.Text`
+  color: white;
+  font-size: 14px;
+`;
