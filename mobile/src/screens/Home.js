@@ -1,28 +1,38 @@
 import { FlatList, TouchableOpacity, View, Alert } from "react-native";
 import { useState } from "react";
+import { useNavigation } from '@react-navigation/native';
 
 import {
   HomeContainer,
   TopSection,
   DateText,
   GreetingText,
+  SubtitleText,
   ProgressCard,
   CardTitle,
   ProgressText,
+  ProgressBarBackground,
+  ProgressBarFill,
+  SectionHeader,
   SectionTitle,
+  SectionCount,
   HabitItem,
   HabitsContainer,
   HabitText,
   HabitDoneText,
   Checkbox,
   CheckboxChecked,
-  CheckMark
+  CheckMark,
+  EmptyText,
+  FloatingButton,
+  FloatingButtonText,
+  ActionsRow,
+  HabitInfo
 } from "../components/styles";
 
 export default function Home() {
-
   const userName = "Emanuel";
-
+  const navigation = useNavigation();
   const today = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "numeric",
@@ -36,91 +46,93 @@ export default function Home() {
     { id: "4", name: "Ler", done: true },
   ]);
 
-  // ✅ Toggle hábito
   const toggleHabit = (id) => {
-    const updated = habits.map(habit =>
+    const updated = habits.map((habit) =>
       habit.id === id ? { ...habit, done: !habit.done } : habit
     );
     setHabits(updated);
   };
 
-  // 🗑️ Deletar hábito
   const deleteHabit = (id) => {
-    const filtered = habits.filter(h => h.id !== id);
+    const filtered = habits.filter((h) => h.id !== id);
     setHabits(filtered);
   };
 
-  // ✏️ Editar (simples por enquanto)
   const editHabit = (id) => {
     Alert.alert("Editar", "Função de edição será implementada depois");
   };
 
-  // ⋮ Menu de opções
+  const addHabit = () => {
+  navigation.navigate('AddHabit');
+};
+
   const openOptions = (habit) => {
-    Alert.alert(
-      habit.name,
-      "Escolha uma opção",
-      [
-        {
-          text: "Editar",
-          onPress: () => editHabit(habit.id),
-        },
-        {
-          text: "Deletar",
-          onPress: () => deleteHabit(habit.id),
-          style: "destructive",
-        },
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-      ]
-    );
+    Alert.alert(habit.name, "Escolha uma opção", [
+      {
+        text: "Editar",
+        onPress: () => editHabit(habit.id),
+      },
+      {
+        text: "Deletar",
+        onPress: () => deleteHabit(habit.id),
+        style: "destructive",
+      },
+      {
+        text: "Cancelar",
+        style: "cancel",
+      },
+    ]);
   };
 
   const total = habits.length;
-  const feitos = habits.filter(h => h.done).length;
-  const progress = Math.round((feitos / total) * 100);
+  const feitos = habits.filter((h) => h.done).length;
+  const progress = total > 0 ? Math.round((feitos / total) * 100) : 0;
 
   return (
     <HomeContainer>
-
-      {/* TOPO */}
       <TopSection>
         <DateText>{today}</DateText>
         <GreetingText>Olá, {userName}</GreetingText>
+        <SubtitleText>Vamos cuidar da sua rotina hoje.</SubtitleText>
       </TopSection>
 
-      {/* CARD */}
       <ProgressCard>
         <CardTitle>Progresso de hoje</CardTitle>
-        <ProgressText>{progress}%</ProgressText>
+        <ProgressText>{feitos} de {total} concluídos • {progress}%</ProgressText>
+
+        <ProgressBarBackground>
+          <ProgressBarFill style={{ width: `${progress}%` }} />
+        </ProgressBarBackground>
       </ProgressCard>
 
-      {/* LISTA */}
-      <SectionTitle>Seus hábitos</SectionTitle>
+      <SectionHeader>
+        <SectionTitle>Seus hábitos</SectionTitle>
+        <SectionCount>{total}</SectionCount>
+      </SectionHeader>
 
       <HabitsContainer>
         <FlatList
           data={habits}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: 120,
+          }}
+          ListEmptyComponent={<EmptyText>Nenhum hábito cadastrado ainda.</EmptyText>}
           renderItem={({ item }) => (
             <HabitItem>
+              <HabitInfo>
+                {item.done ? (
+                  <HabitDoneText>{item.name}</HabitDoneText>
+                ) : (
+                  <HabitText>{item.name}</HabitText>
+                )}
+              </HabitInfo>
 
-              {/* Nome */}
-              {item.done ? (
-                <HabitDoneText>{item.name}</HabitDoneText>
-              ) : (
-                <HabitText>{item.name}</HabitText>
-              )}
-
-              {/* Ações */}
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-
-                {/* Checkbox */}
+              <ActionsRow>
                 <TouchableOpacity
                   onPress={() => toggleHabit(item.id)}
-                  style={{ marginRight: 15 }}
+                  style={{ marginRight: 14 }}
                 >
                   {item.done ? (
                     <CheckboxChecked>
@@ -131,21 +143,21 @@ export default function Home() {
                   )}
                 </TouchableOpacity>
 
-                {/* Menu */}
                 <TouchableOpacity
                   onPress={() => openOptions(item)}
-                  style={{ padding: 5 }}
+                  style={{ paddingHorizontal: 4, paddingVertical: 2 }}
                 >
-                  <HabitText style={{ fontSize: 20 }}>⋮</HabitText>
+                  <HabitText style={{ fontSize: 22 }}>⋮</HabitText>
                 </TouchableOpacity>
-
-              </View>
-
+              </ActionsRow>
             </HabitItem>
           )}
         />
       </HabitsContainer>
 
+      <FloatingButton onPress={addHabit} activeOpacity={0.8}>
+        <FloatingButtonText>+</FloatingButtonText>
+      </FloatingButton>
     </HomeContainer>
   );
 }

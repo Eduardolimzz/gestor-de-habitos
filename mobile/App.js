@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './src/screens/Login';
 import Signup from './src/screens/Signup';
 import TabRoutes from './src/navigation/TabRoutes';
+import AddHabit from './src/screens/AddHabit';
+import { StackScreenLifecycleState } from 'react-native-screens';
 
 const Stack = createNativeStackNavigator();
 
@@ -11,10 +13,12 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Main">
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Signup" component={Signup} />
         <Stack.Screen name="Main" component={TabRoutes} />
+        <Stack.Screen name="AddHabit" component={AddHabit} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

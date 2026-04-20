@@ -4,16 +4,30 @@ import Constants from 'expo-constants';
 const StatusBarHeight = Constants.statusBarHeight;
 
 export const Colors = {
-  primary: '#ffffff',
-  secondary: '#E5E7EB',
+  primary: '#FFFFFF',
+  secondary: '#F8F9F9',
   terciary: '#1F2937',
-  darklight: '#9CA3AF',
+  darklight: '#777777',
   brand: '#10B981',
-  green: '#10B981',
+  green: '#2ECC71',
   red: '#EF4444',
+  lightBg: '#F4F6F6',
+  border: '#E5E7EB',
+  black: '#000000',
 };
 
-const { primary, secondary, terciary, darklight, brand, green } = Colors;
+const {
+  primary,
+  secondary,
+  terciary,
+  darklight,
+  brand,
+  green,
+  red,
+  lightBg,
+  border,
+  black,
+} = Colors;
 
 export const StyledContainer = styled.View`
   flex: 1;
@@ -63,7 +77,7 @@ export const StyledButton = styled.TouchableOpacity`
 `;
 
 export const ButtonText = styled.Text`
-  color: ${(props) => (props.google ? terciary : "#fff")};
+  color: ${(props) => (props.google ? terciary : primary)};
   font-size: 16px;
   font-weight: bold;
 `;
@@ -94,6 +108,7 @@ export const TextLinkContent = styled.Text`
   font-weight: bold;
   margin-top: -40px;
 `;
+
 export const SignupContainer = styled.View`
   flex: 1;
   padding: 25px;
@@ -135,7 +150,7 @@ export const GoogleIconButton = styled.TouchableOpacity`
   border-radius: 14px;
   align-items: center;
   margin-top: 15px;
-  shadow-color: #000;
+  shadow-color: ${black};
   shadow-offset: 0px 2px;
   shadow-opacity: 0.08;
   shadow-radius: 6px;
@@ -146,7 +161,7 @@ export const GoogleIconButton = styled.TouchableOpacity`
 export const HomeContainer = styled.View`
   flex: 1;
   padding: 20px;
-  background-color: #f8f9f9;
+  background-color: ${secondary};
 `;
 
 // TOPO DA HOME
@@ -157,19 +172,19 @@ export const TopSection = styled.View`
 // DATA DA HOME
 export const DateText = styled.Text`
   font-size: 14px;
-  color: #777;
+  color: ${darklight};
 `;
 
 // SAUDAÇÃO DA HOME
 export const GreetingText = styled.Text`
   font-size: 24px;
   font-weight: bold;
-  color: #27ae60;
+  color: ${green};
 `;
 
 // CARD DA HOME
 export const ProgressCard = styled.View`
-  background-color: #2ecc71;
+  background-color: ${green};
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 20px;
@@ -177,12 +192,12 @@ export const ProgressCard = styled.View`
 
 // TEXTO CARD DA HOME
 export const CardTitle = styled.Text`
-  color: #ffffff;
+  color: ${primary};
   font-size: 16px;
 `;
 
 export const ProgressText = styled.Text`
-  color: #ffffff;
+  color: ${primary};
   font-size: 32px;
   font-weight: bold;
 `;
@@ -192,7 +207,7 @@ export const SectionTitle = styled.Text`
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 10px;
-  color: #2ecc71;
+  color: ${green};
 `;
 
 // ITEM HÁBITO DA HOME
@@ -200,37 +215,34 @@ export const HabitItem = styled.View`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-
   padding: 15px;
   border-radius: 10px;
-  background-color: #f4f6f6;
+  background-color: ${lightBg};
   margin-bottom: 10px;
 `;
 
-//cria BOX
+// BOX DOS HÁBITOS
 export const HabitsContainer = styled.View`
-  background-color: #ffffff;
+  background-color: ${primary};
   padding: 15px;
   border-radius: 12px;
 
-  /* sombra (iOS) */
-  shadow-color: #000;
+  shadow-color: ${black};
   shadow-offset: 0px 2px;
   shadow-opacity: 0.1;
   shadow-radius: 4px;
 
-  /* sombra (Android) */
   elevation: 3;
 `;
 
 export const HabitText = styled.Text`
-  color: #000;
+  color: ${black};
   font-size: 16px;
 `;
 
 export const HabitDoneText = styled.Text`
   font-size: 16px;
-  color: #2ecc71;
+  color: ${green};
   text-decoration: line-through;
 `;
 
@@ -238,26 +250,96 @@ export const Checkbox = styled.View`
   width: 22px;
   height: 22px;
   border-radius: 6px;
-
-  border: 2px solid #2ecc71;
-
+  border: 2px solid ${green};
   align-items: center;
   justify-content: center;
 `;
-
 
 export const CheckboxChecked = styled.View`
   width: 22px;
   height: 22px;
   border-radius: 6px;
-
-  background-color: #2ecc71;
-
+  background-color: ${green};
   align-items: center;
   justify-content: center;
 `;
 
 export const CheckMark = styled.Text`
-  color: white;
+  color: ${primary};
   font-size: 14px;
+`;
+
+export const SubtitleText = styled.Text`
+  font-size: 14px;
+  color: ${darklight};
+  margin-top: 4px;
+`;
+
+export const ProgressBarBackground = styled.View`
+  width: 100%;
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  margin-top: 14px;
+  overflow: hidden;
+`;
+
+export const ProgressBarFill = styled.View`
+  height: 100%;
+  background-color: ${primary};
+  border-radius: 999px;
+`;
+
+export const SectionHeader = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+`;
+
+export const SectionCount = styled.Text`
+  font-size: 14px;
+  font-weight: bold;
+  color: ${darklight};
+`;
+
+export const EmptyText = styled.Text`
+  text-align: center;
+  color: ${darklight};
+  font-size: 15px;
+  padding: 20px 0;
+`;
+
+export const FloatingButton = styled.TouchableOpacity`
+  position: absolute;
+  right: 20px;
+  bottom: 25px;
+  width: 58px;
+  height: 58px;
+  border-radius: 29px;
+  background-color: ${green};
+  align-items: center;
+  justify-content: center;
+
+  shadow-color: ${black};
+  shadow-offset: 0px 4px;
+  shadow-opacity: 0.18;
+  shadow-radius: 6px;
+  elevation: 6;
+`;
+
+export const FloatingButtonText = styled.Text`
+  color: ${primary};
+  font-size: 28px;
+  font-weight: bold;
+`;
+
+export const ActionsRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+`;
+
+export const HabitInfo = styled.View`
+  flex: 1;
+  margin-right: 10px;
 `;
