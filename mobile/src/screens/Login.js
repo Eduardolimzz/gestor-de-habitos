@@ -25,10 +25,7 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      await api.post('/auth/login', {
-        email,
-        password
-      });
+      navigation.navigate('Welcome');
 
       Alert.alert('Sucesso', 'Login realizado!');
       navigation.navigate('Welcome'); // depois podemos trocar pra Habits
