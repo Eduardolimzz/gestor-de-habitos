@@ -181,7 +181,7 @@ export default function Home({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.date}>Dom, 1 de março, 2026</Text>
+      {/* <Text style={styles.date}>Dom, 1 de março, 2026</Text> */}
 
       <Text style={styles.greeting}>
         Olá, <Text style={styles.name}>{user?.name ?? 'Usuário'}!</Text>
