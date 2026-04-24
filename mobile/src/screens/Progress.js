@@ -52,51 +52,85 @@ const Welcome = ({ navigation }) => {
   const visibleGoals = mockGoals.slice(0, 3);
 
   return (
-    <StyledContainer>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <InnerContainer>
-          <Text style={styles.pageTitle}>Progresso</Text>
+    <View style={styles.screen}>
+      <StyledContainer>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <InnerContainer>
+            <Text style={styles.pageTitle}>Progresso</Text>
 
-          <View style={styles.topRow}>
-            <Text style={styles.sectionTitle}>Relatório de progresso</Text>
-            <TouchableOpacity style={styles.monthButton}>
-              <Text style={styles.monthButtonText}>Esse Mês</Text>
-              <Text style={styles.monthArrow}>⌄</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.mainCard}>
-            <View style={styles.headerCard}>
-              <Text style={styles.mainCardTitle}>Suas Metas</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('GoalsProgress')}>
-                <Text style={styles.verTodas}>Ver todas</Text>
+            <View style={styles.topRow}>
+              <Text style={styles.sectionTitle}>Relatório de progresso</Text>
+              <TouchableOpacity style={styles.monthButton}>
+                <Text style={styles.monthButtonText}>Esse Mês</Text>
+                <Text style={styles.monthArrow}>⌄</Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.progressWrapper}>
-              <View style={styles.circleOuter}>
-                <View style={styles.circleInner}>
-                  <Text style={styles.percentText}>60%</Text>
+            <View style={styles.mainCard}>
+              <View style={styles.headerCard}>
+                <Text style={styles.mainCardTitle}>Suas Metas</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('GoalsProgress')}>
+                  <Text style={styles.verTodas}>Ver todas</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.progressWrapper}>
+                <View style={styles.circleOuter}>
+                  <View style={styles.circleInner}>
+                    <Text style={styles.percentText}>60%</Text>
+                  </View>
                 </View>
               </View>
+
+              <Text style={styles.okText}>✓ 11 Metas foram alcançadas</Text>
+              <Text style={styles.badText}>✕ 6 Metas não foram alcançadas</Text>
+
+              {visibleGoals.map((goal) => (
+                <MetaCard key={goal.id} goal={goal} navigation={navigation} />
+              ))}
             </View>
+          </InnerContainer>
+        </ScrollView>
+      </StyledContainer>
 
-            <Text style={styles.okText}>✓ 11 Metas foram alcançadas</Text>
-            <Text style={styles.badText}>✕ 6 Metas não foram alcançadas</Text>
-
-            {visibleGoals.map((goal) => (
-              <MetaCard key={goal.id} goal={goal} navigation={navigation} />
-            ))}
-          </View>
-        </InnerContainer>
-      </ScrollView>
-    </StyledContainer>
+      <View style={styles.bottomNav}>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.navIcon}>⌂</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Progress')}>
+          <Text style={styles.navIconActive}>⌁</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('GoalsProgress')}>
+          <Text style={styles.navIcon}>⚙</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
 export default Welcome;
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  bottomNav: {
+    height: 52,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#EEE',
+  },
+  navIcon: {
+    fontSize: 24,
+    color: '#999',
+  },
+  navIconActive: {
+    fontSize: 24,
+    color: '#39B54A',
+  },
   pageTitle: {
     fontSize: 30,
     fontWeight: 'bold',
