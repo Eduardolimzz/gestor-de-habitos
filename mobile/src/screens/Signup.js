@@ -36,7 +36,13 @@ const Signup = ({ navigation }) => {
       navigation.navigate('Login');
 
     } catch (error) {
-      Alert.alert('Erro', error.response?.data?.message || 'Erro ao cadastrar');
+      const isNetworkError = !error.response;
+      const message = isNetworkError
+        ? 'Não foi possível conectar ao servidor.\n\nVerifique se o backend está rodando e se o IP no arquivo api.js está correto.'
+        : (error.response?.data?.message || 'Erro ao cadastrar. Tente novamente.');
+
+      console.error('[Signup] Erro:', error.message, error.response?.data);
+      Alert.alert('Erro', message);
     }
   };
 

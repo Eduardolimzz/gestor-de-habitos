@@ -6,6 +6,9 @@ import {
   FlatList,
   Modal,
   TextInput,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
 } from 'react-native';
 
@@ -195,7 +198,7 @@ export default function Home({ navigation }) {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Hábitos de hoje</Text>
 
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('AllHabits', { habits })}>
             <Text style={styles.seeAll}>Ver todos</Text>
           </TouchableOpacity>
         </View>
@@ -234,9 +237,15 @@ export default function Home({ navigation }) {
       </TouchableOpacity>
 
       <View style={styles.bottomNav}>
-        <Text style={styles.navIconActive}>⌂</Text>
-        <Text style={styles.navIcon}>⌁</Text>
-        <Text style={styles.navIcon}>⚙</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.navIconActive}>⌂</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Progress')}>
+          <Text style={styles.navIcon}>⌁</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('GoalsProgress')}>
+          <Text style={styles.navIcon}>⚙</Text>
+        </TouchableOpacity>
       </View>
 
       <Modal
@@ -270,7 +279,10 @@ export default function Home({ navigation }) {
         animationType="fade"
         onRequestClose={fecharModal}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
           <View style={styles.modalBox}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
@@ -282,46 +294,48 @@ export default function Home({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.inputLabel}>Sua meta</Text>
-            <TextInput
-              style={styles.input}
-              value={novaMeta}
-              onChangeText={setNovaMeta}
-              placeholder="Ex: Melhorar minha saúde"
-              placeholderTextColor="#999"
-            />
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={styles.inputLabel}>Sua meta</Text>
+              <TextInput
+                style={styles.input}
+                value={novaMeta}
+                onChangeText={setNovaMeta}
+                placeholder="Ex: Melhorar minha saúde"
+                placeholderTextColor="#999"
+              />
 
-            <Text style={styles.inputLabel}>Nome do hábito</Text>
-            <TextInput
-              style={styles.input}
-              value={novoHabito}
-              onChangeText={setNovoHabito}
-              placeholder="Ex: Beber 3L de água"
-              placeholderTextColor="#999"
-            />
+              <Text style={styles.inputLabel}>Nome do hábito</Text>
+              <TextInput
+                style={styles.input}
+                value={novoHabito}
+                onChangeText={setNovoHabito}
+                placeholder="Ex: Beber 3L de água"
+                placeholderTextColor="#999"
+              />
 
-            <Text style={styles.inputLabel}>Período</Text>
-            <TouchableOpacity style={styles.selectBox}>
-              <Text style={styles.selectText}>{periodo}</Text>
-              <Text style={styles.selectArrow}>⌄</Text>
-            </TouchableOpacity>
+              <Text style={styles.inputLabel}>Período</Text>
+              <TouchableOpacity style={styles.selectBox}>
+                <Text style={styles.selectText}>{periodo}</Text>
+                <Text style={styles.selectArrow}>⌄</Text>
+              </TouchableOpacity>
 
-            <Text style={styles.inputLabel}>Frequência</Text>
-            <TouchableOpacity style={styles.selectBox}>
-              <Text style={styles.selectText}>{frequencia}</Text>
-              <Text style={styles.selectArrow}>⌄</Text>
-            </TouchableOpacity>
+              <Text style={styles.inputLabel}>Frequência</Text>
+              <TouchableOpacity style={styles.selectBox}>
+                <Text style={styles.selectText}>{frequencia}</Text>
+                <Text style={styles.selectArrow}>⌄</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={criarOuEditarMeta}
-            >
-              <Text style={styles.createButtonText}>
-                {editandoId ? 'Salvar alterações' : 'Criar'}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={criarOuEditarMeta}
+              >
+                <Text style={styles.createButtonText}>
+                  {editandoId ? 'Salvar alterações' : 'Criar'}
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -555,11 +569,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
   modalBox: {
-    width: '100',
+    width: '100%',
     backgroundColor: '#fff',
-    borderRadius: 6,
-    padding: 18,
+    borderRadius: 10,
+    padding: 20,
     elevation: 10,
+    maxHeight: '85%',
   },
   modalHeader: {
     flexDirection: 'row',
