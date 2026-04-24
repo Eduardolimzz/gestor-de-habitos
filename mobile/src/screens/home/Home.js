@@ -11,6 +11,9 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
+import ExcluirConfirmacao from '../modal/ExcluirConfirm';
+import HabitConcluido from '../habits/HabitConcluido';
+import { useAuth } from '../../context/AuthContext';
 
 const initialHabits = [
   {
@@ -43,11 +46,14 @@ const initialHabits = [
 ];
 
 export default function Home({ navigation }) {
+  const { user } = useAuth();
   const [habits, setHabits] = useState(initialHabits);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState(null);
+  const [excluirVisible, setExcluirVisible] = useState(false);
+  const [concluidoVisible, setConcluidoVisible] = useState(false);
 
   const [novaMeta, setNovaMeta] = useState('');
   const [novoHabito, setNovoHabito] = useState('');
@@ -109,7 +115,6 @@ export default function Home({ navigation }) {
       );
       fecharModal();
     } else {
-      // Criação: adiciona o hábito e navega para HabitAdd
       const novaMetaCriada = {
         id: String(Date.now()),
         titulo: novaMeta,
@@ -124,20 +129,13 @@ export default function Home({ navigation }) {
 
       setHabits((prev) => [...prev, novaMetaCriada]);
       fecharModal();
-      navigation.navigate('HabitAdd'); // ← tela "Concluído!"
+      setConcluidoVisible(true);
     }
   }
 
   function pedirConfirmacaoExcluir() {
     setMenuAberto(false);
-    // Passa o id e um callback para excluir de volta nesta tela
-    navigation.navigate('ExcluirConfirm', {
-      habitId: itemSelecionado?.id,
-      onExcluir: (id) => {
-        setHabits((prev) => prev.filter((item) => item.id !== id));
-      },
-    });
-    setItemSelecionado(null);
+    setExcluirVisible(true);
   }
   
 
@@ -186,7 +184,7 @@ export default function Home({ navigation }) {
       <Text style={styles.date}>Dom, 1 de março, 2026</Text>
 
       <Text style={styles.greeting}>
-        Olá, <Text style={styles.name}>Marcelo!</Text>
+        Olá, <Text style={styles.name}>{user?.name ?? 'Usuário'}!</Text>
       </Text>
 
       <View style={styles.progressCard}>
@@ -251,7 +249,7 @@ export default function Home({ navigation }) {
         <TouchableOpacity onPress={() => navigation.navigate('Progress')}>
           <Text style={styles.navIcon}>⌁</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('GoalsProgress')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Configuracoes')}>
           <Text style={styles.navIcon}>⚙</Text>
         </TouchableOpacity>
       </View>
@@ -345,6 +343,26 @@ export default function Home({ navigation }) {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <HabitConcluido
+        visible={concluidoVisible}
+        onOk={() => setConcluidoVisible(false)}
+      />
+
+      <ExcluirConfirmacao
+        visible={excluirVisible}
+        onConfirm={() => {
+          if (itemSelecionado) {
+            setHabits((prev) => prev.filter((item) => item.id !== itemSelecionado.id));
+          }
+          setItemSelecionado(null);
+          setExcluirVisible(false);
+        }}
+        onCancel={() => {
+          setItemSelecionado(null);
+          setExcluirVisible(false);
+        }}
+      />
     </View>
   );
 }

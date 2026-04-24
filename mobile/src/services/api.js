@@ -1,9 +1,13 @@
 import axios from 'axios';
+import Constants from 'expo-constants';
 
-// IMPORTANTE: troque o IP abaixo pelo IP atual do seu computador na rede Wi-Fi
-// Para descobrir: no Windows abra o CMD e digite "ipconfig"
-// Procure por "Endereço IPv4" na seção do Wi-Fi (ex: 192.168.x.x ou 172.x.x.x)
-const BASE_URL = 'http://172.27.6.225:3000';
+// Pega o IP do computador automaticamente via Expo — funciona em qualquer máquina
+const host =
+  Constants.expoConfig?.hostUri?.split(':')[0] ||
+  Constants.manifest?.debuggerHost?.split(':')[0] ||
+  'localhost';
+
+const BASE_URL = `http://${host}:3000`;
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -18,8 +22,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK' || !error.response) {
-      console.error('[API] Erro de conexão — verifique se o backend está rodando e se o IP está correto:', BASE_URL);
+    if (!error.response) {
+      console.error('[API] Erro de conexão — backend está rodando?', BASE_URL);
     } else {
       console.error('[API] Erro na resposta:', error.response?.status, error.response?.data);
     }
