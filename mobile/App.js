@@ -9,6 +9,12 @@ import GoalDetails from './src/screens/GoalDetails';
 import Home from './src/screens/Home';
 import AllHabits from './src/screens/AllHabits';
 
+// ── Novas telas ──────────────────────────────────────────────
+import HabitAdd from './src/screens/HabitAdd';
+import ExcluirConfirm from './src/screens/ExcluirConfirm';
+import ExcluidoSucesso from './src/screens/ExcluidoSucesso';
+// ────────────────────────────────────────────────────────────
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -25,6 +31,11 @@ export default function App() {
         <Stack.Screen name="GoalDetails" component={GoalDetails} />
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="AllHabits" component={AllHabits} />
+
+        {/* Novas telas */}
+        <Stack.Screen name="HabitAdd" component={HabitAdd} />
+        <Stack.Screen name="ExcluirConfirm" component={ExcluirConfirm} />
+        <Stack.Screen name="ExcluidoSuce" component={ExcluidoSucesso} />
       </Stack.Navigator>
     </NavigationContainer>
   );

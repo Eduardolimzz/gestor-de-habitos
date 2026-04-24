@@ -92,6 +92,7 @@ export default function Home({ navigation }) {
     }
 
     if (editandoId) {
+      // Edição: só salva e fecha
       setHabits((prev) =>
         prev.map((item) =>
           item.id === editandoId
@@ -106,7 +107,9 @@ export default function Home({ navigation }) {
             : item
         )
       );
+      fecharModal();
     } else {
+      // Criação: adiciona o hábito e navega para HabitAdd
       const novaMetaCriada = {
         id: String(Date.now()),
         titulo: novaMeta,
@@ -120,26 +123,31 @@ export default function Home({ navigation }) {
       };
 
       setHabits((prev) => [...prev, novaMetaCriada]);
+      fecharModal();
+      navigation.navigate('HabitAdd'); // ← tela "Concluído!"
     }
-
-    fecharModal();
   }
 
-  function excluirHabito(id) {
-    setHabits((prev) => prev.filter((item) => item.id !== id));
+  function pedirConfirmacaoExcluir() {
     setMenuAberto(false);
+    // Passa o id e um callback para excluir de volta nesta tela
+    navigation.navigate('ExcluirConfirm', {
+      habitId: itemSelecionado?.id,
+      onExcluir: (id) => {
+        setHabits((prev) => prev.filter((item) => item.id !== id));
+      },
+    });
     setItemSelecionado(null);
   }
+  
 
   function editarHabito(item) {
     if (!item) return;
-
     setEditandoId(item.id);
     setNovaMeta(item.titulo || '');
     setNovoHabito(item.habitName || item.title || '');
     setPeriodo(item.periodo || '1 Mês (30 Dias)');
     setFrequencia(item.tipoHabito || 'Diário');
-
     setMenuAberto(false);
     setItemSelecionado(null);
     setModalVisible(true);
@@ -248,6 +256,7 @@ export default function Home({ navigation }) {
         </TouchableOpacity>
       </View>
 
+      {/* ── Modal: Menu de opções (Editar / Excluir) ── */}
       <Modal
         visible={menuAberto}
         transparent
@@ -264,15 +273,14 @@ export default function Home({ navigation }) {
               <Text style={styles.optionText}>Editar</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => itemSelecionado && excluirHabito(itemSelecionado.id)}
-            >
+            <TouchableOpacity onPress={pedirConfirmacaoExcluir}>
               <Text style={styles.deleteOptionText}>Excluir</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
 
+      {/* ── Modal: Formulário criar / editar ── */}
       <Modal
         visible={modalVisible}
         transparent
