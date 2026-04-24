@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { Alert } from "react-native";
-import api from "../services/api";
+import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 import {
   StyledContainer,
@@ -17,21 +18,26 @@ import {
   TextLink,
   TextLinkContent,
   TopRow,
-} from "../components/styles";
+} from "../../components/styles";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useAuth();
 
   const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Atenção', 'Preencha email e senha.');
+      return;
+    }
+
     try {
+      const response = await api.post('/auth/login', { email, password });
+      const { user } = response.data;
+      login(user);
       navigation.navigate('Home');
-
-      Alert.alert('Sucesso', 'Login realizado!');
-      navigation.navigate('Home'); // depois podemos trocar pra Habits
-
     } catch (error) {
-      Alert.alert('Erro', error.response?.data?.message || 'Erro ao logar');
+      Alert.alert('Erro', error.response?.data?.message || 'Erro ao fazer login');
     }
   };
 
@@ -49,6 +55,8 @@ const Login = ({ navigation }) => {
         <StyledFormArea>
           <StyledTextInput
             placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
             onChangeText={setEmail}
           />
 

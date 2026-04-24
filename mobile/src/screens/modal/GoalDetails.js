@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { StyledContainer, InnerContainer } from '../components/styles';
+import { StyledContainer, InnerContainer } from '../../components/styles';
 
 function Dia({ numero, destaque = false, ativo = false }) {
   return (

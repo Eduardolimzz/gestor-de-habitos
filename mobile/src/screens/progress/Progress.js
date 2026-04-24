@@ -6,8 +6,8 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { StyledContainer, InnerContainer } from '../components/styles';
-import mockGoals from '../data/mockGoals';
+import { StyledContainer, InnerContainer } from '../../components/styles';
+import mockGoals from '../../data/mockGoals';
 
 function MetaCard({ goal, navigation }) {
   const concluido = goal.status === 'Concluído';
@@ -58,13 +58,7 @@ const Welcome = ({ navigation }) => {
           <InnerContainer>
             <Text style={styles.pageTitle}>Progresso</Text>
 
-            <View style={styles.topRow}>
-              <Text style={styles.sectionTitle}>Relatório de progresso</Text>
-              <TouchableOpacity style={styles.monthButton}>
-                <Text style={styles.monthButtonText}>Esse Mês</Text>
-                <Text style={styles.monthArrow}>⌄</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.sectionTitle}>Relatório de progresso</Text>
 
             <View style={styles.mainCard}>
               <View style={styles.headerCard}>
@@ -100,7 +94,7 @@ const Welcome = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.navigate('Progress')}>
           <Text style={styles.navIconActive}>⌁</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('GoalsProgress')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Configuracoes')}>
           <Text style={styles.navIcon}>⚙</Text>
         </TouchableOpacity>
       </View>

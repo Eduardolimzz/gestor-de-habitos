@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { StyledContainer, InnerContainer } from '../components/styles';
-import mockGoals from '../data/mockGoals';
+import { StyledContainer, InnerContainer } from '../../components/styles';
+import mockGoals from '../../data/mockGoals';
 
 function ProgressBar({ percentual }) {
   return (

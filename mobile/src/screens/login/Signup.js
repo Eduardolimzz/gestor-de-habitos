@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { Text, Alert } from "react-native";
-import api from "../services/api";
+import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 import {
   StyledContainer,
@@ -17,23 +18,19 @@ import {
   ButtonText,
   MsgBox,
   GoogleIconButton,
-} from "../components/styles";
+} from "../../components/styles";
 
 const Signup = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useAuth();
 
   const handleSignup = async () => {
     try {
-      await api.post('/auth/register', {
-        name,
-        email,
-        password
-      });
-
-      Alert.alert('Sucesso', 'Conta criada!');
-      navigation.navigate('Login');
+      await api.post('/auth/register', { name, email, password });
+      login({ name, email });
+      navigation.navigate('Home');
 
     } catch (error) {
       const isNetworkError = !error.response;
