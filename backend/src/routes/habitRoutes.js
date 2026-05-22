@@ -1,9 +1,21 @@
 const express = require('express');
+
+const authMiddleware = require('../middlewares/authMiddleware');
+
+const {
+  listHabits,
+  createHabit,
+  updateHabit,
+  deleteHabit
+} = require('../controllers/habitController');
+
 const router = express.Router();
 
-const { listarHabitos, criarHabito } = require('../controllers/habitController');
+router.use(authMiddleware);
 
-router.get('/', listarHabitos);
-router.post('/', criarHabito);
+router.get('/', listHabits);
+router.post('/', createHabit);
+router.put('/:id', updateHabit);
+router.delete('/:id', deleteHabit);
 
-module.exports = router;    
+module.exports = router;

@@ -1,15 +1,26 @@
 let users = [];
+let id = 1;
 
-const createUser = (user) => {
-  users.push(user);
-  return user;
+const create = (user) => {
+  const newUser = {
+    id: id++,
+    ...user
+  };
+
+  users.push(newUser);
+  return newUser;
 };
 
-const findUserByEmail = (email) => {
-  return users.find(u => u.email === email);
+const findByEmail = (email) => {
+  return users.find(user => user.email === email);
+};
+
+const findById = (id) => {
+  return users.find(user => user.id === Number(id));
 };
 
 module.exports = {
-  createUser,
-  findUserByEmail
+  create,
+  findByEmail,
+  findById
 };

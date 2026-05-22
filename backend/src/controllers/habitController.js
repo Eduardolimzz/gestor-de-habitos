@@ -1,21 +1,71 @@
-const { getAllHabits, createHabit } = require('../models/habitModel');
+const { makeHabitService } = require('../factories/habitFactory');
 
-const listarHabitos = (req, res) => {
-  res.json(getAllHabits());
+const listHabits = (req, res) => {
+  try {
+    const habitService = makeHabitService();
+
+    const habits = habitService.list(req.user.id);
+
+    return res.json(habits);
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
+  }
 };
 
-const criarHabito = (req, res) => {
-  const { nome } = req.body;
+const createHabit = (req, res) => {
+  try {
+    const habitService = makeHabitService();
 
-  if (!nome) {
-    return res.status(400).json({ erro: 'Nome é obrigatório' });
+    const habit = habitService.create({
+      name: req.body.name,
+      userId: req.user.id
+    });
+
+    return res.status(201).json(habit);
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
   }
+};
 
-  const habit = createHabit(nome);
-  res.status(201).json(habit);
+const updateHabit = (req, res) => {
+  try {
+    const habitService = makeHabitService();
+
+    const habit = habitService.update(
+      req.params.id,
+      req.user.id,
+      req.body
+    );
+
+    return res.json(habit);
+  } catch (error) {
+    return res.status(404).json({
+      message: error.message
+    });
+  }
+};
+
+const deleteHabit = (req, res) => {
+  try {
+    const habitService = makeHabitService();
+
+    habitService.delete(req.params.id, req.user.id);
+
+    return res.status(204).send();
+  } catch (error) {
+    return res.status(404).json({
+      message: error.message
+    });
+  }
 };
 
 module.exports = {
-  listarHabitos,
-  criarHabito
+  listHabits,
+  createHabit,
+  updateHabit,
+  deleteHabit
 };

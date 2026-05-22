@@ -1,5 +1,10 @@
 const app = require('./src/app');
+const { port, jwtSecret } = require('./src/config/env');
 
-app.listen(3000, () => {
-  console.log('Servidor rodando na porta 3000');
+if (!jwtSecret) {
+  throw new Error('JWT_SECRET não definido no arquivo .env');
+}
+
+app.listen(port, () => {
+  console.log(`Servidor rodando na porta ${port}`);
 });
