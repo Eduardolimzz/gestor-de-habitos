@@ -1,10 +1,13 @@
-class HabitService {
-  constructor(habitModel) {
-    this.habitModel = habitModel;
+const HabitServiceContract = require('./contracts/habitServiceContract');
+
+class HabitService extends HabitServiceContract {
+  constructor(habitRepository) {
+    super();
+    this.habitRepository = habitRepository;
   }
 
   list(userId) {
-    return this.habitModel.findAllByUserId(userId);
+    return this.habitRepository.findAllByUserId(userId);
   }
 
   create({ name, userId }) {
@@ -12,11 +15,11 @@ class HabitService {
       throw new Error('Nome do hábito é obrigatório');
     }
 
-    return this.habitModel.create({ name, userId });
+    return this.habitRepository.create({ name, userId });
   }
 
   update(id, userId, data) {
-    const habit = this.habitModel.update(id, userId, data);
+    const habit = this.habitRepository.update(id, userId, data);
 
     if (!habit) {
       throw new Error('Hábito não encontrado');
@@ -26,7 +29,7 @@ class HabitService {
   }
 
   delete(id, userId) {
-    const removed = this.habitModel.remove(id, userId);
+    const removed = this.habitRepository.remove(id, userId);
 
     if (!removed) {
       throw new Error('Hábito não encontrado');
@@ -37,3 +40,4 @@ class HabitService {
 }
 
 module.exports = HabitService;
+

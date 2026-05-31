@@ -1,9 +1,11 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const AuthServiceContract = require('./contracts/authServiceContract');
 
-class AuthService {
-  constructor(userModel, config) {
-    this.userModel = userModel;
+class AuthService extends AuthServiceContract {
+  constructor(userRepository, config) {
+    super();
+    this.userRepository = userRepository;
     this.config = config;
   }
 
@@ -12,7 +14,7 @@ class AuthService {
       throw new Error('Preencha todos os campos');
     }
 
-    const userExists = this.userModel.findByEmail(email);
+    const userExists = this.userRepository.findByEmail(email);
 
     if (userExists) {
       throw new Error('Usuário já existe');
@@ -20,16 +22,16 @@ class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = this.userModel.create({
+    const user = this.userRepository.create({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     return {
       id: user.id,
       name: user.name,
-      email: user.email
+      email: user.email,
     };
   }
 
@@ -38,7 +40,7 @@ class AuthService {
       throw new Error('E-mail e senha são obrigatórios');
     }
 
-    const user = this.userModel.findByEmail(email);
+    const user = this.userRepository.findByEmail(email);
 
     if (!user) {
       throw new Error('Credenciais inválidas');
@@ -50,21 +52,20 @@ class AuthService {
       throw new Error('Credenciais inválidas');
     }
 
-    const token = jwt.sign(
-      { id: user.id },
-      this.config.jwtSecret,
-      { expiresIn: this.config.jwtExpiresIn }
-    );
+    const token = jwt.sign({ id: user.id }, this.config.jwtSecret, {
+      expiresIn: this.config.jwtExpiresIn,
+    });
 
     return {
       token,
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     };
   }
 }
 
 module.exports = AuthService;
+

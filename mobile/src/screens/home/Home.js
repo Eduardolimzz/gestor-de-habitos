@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,44 +10,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Alert,
 } from 'react-native';
+
 import ExcluirConfirmacao from '../modal/ExcluirConfirm';
 import HabitConcluido from '../habits/HabitConcluido';
 import { useAuth } from '../../context/AuthContext';
-
-const initialHabits = [
-  {
-    id: '1',
-    titulo: 'Me hidratar melhor',
-    habitName: '3L de água',
-    title: '3L de água',
-    done: true,
-    periodo: '1 Mês (30 Dias)',
-    tipoHabito: 'Diário',
-  },
-  {
-    id: '2',
-    titulo: 'Estudar mais',
-    habitName: 'Estudar programação',
-    title: 'Estudar programação',
-    done: true,
-    periodo: '1 Mês (30 Dias)',
-    tipoHabito: 'Diário',
-  },
-  {
-    id: '3',
-    titulo: 'Aprender inglês',
-    habitName: 'Praticar inglês',
-    title: 'Praticar inglês',
-    done: false,
-    periodo: '1 Mês (30 Dias)',
-    tipoHabito: 'Diário',
-  },
-];
+import { createHabit, deleteHabit, listHabits, updateHabit } from '../../services/habits';
+import mockGoals from '../../data/mockGoals';
 
 export default function Home({ navigation }) {
   const { user } = useAuth();
-  const [habits, setHabits] = useState(initialHabits);
+
+  const [habits, setHabits] = useState([]);
+  const [loadingHabits, setLoadingHabits] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
@@ -55,21 +31,15 @@ export default function Home({ navigation }) {
   const [excluirVisible, setExcluirVisible] = useState(false);
   const [concluidoVisible, setConcluidoVisible] = useState(false);
 
-  const [novaMeta, setNovaMeta] = useState('');
   const [novoHabito, setNovoHabito] = useState('');
-  const [periodo, setPeriodo] = useState('1 Mês (30 Dias)');
-  const [frequencia, setFrequencia] = useState('Diário');
   const [editandoId, setEditandoId] = useState(null);
 
-  const completed = habits.filter((item) => item.done).length;
+  const completed = useMemo(() => habits.filter((h) => h.done).length, [habits]);
   const total = habits.length;
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   function limparFormulario() {
-    setNovaMeta('');
     setNovoHabito('');
-    setPeriodo('1 Mês (30 Dias)');
-    setFrequencia('Diário');
     setEditandoId(null);
   }
 
@@ -83,53 +53,53 @@ export default function Home({ navigation }) {
     setModalVisible(false);
   }
 
-  function toggleHabit(id) {
-    setHabits((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, done: !item.done } : item
-      )
-    );
+  async function carregarHabitos() {
+    try {
+      setLoadingHabits(true);
+      const data = await listHabits();
+      setHabits(data);
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.message || 'Erro ao carregar hábitos');
+    } finally {
+      setLoadingHabits(false);
+    }
   }
 
-  function criarOuEditarMeta() {
-    if (!novaMeta.trim() || !novoHabito.trim()) {
-      alert('Preencha todos os campos.');
+  useEffect(() => {
+    carregarHabitos();
+  }, []);
+
+  async function toggleHabit(id) {
+    try {
+      const current = habits.find((h) => h.id === id);
+      if (!current) return;
+      const updated = await updateHabit(id, { done: !current.done });
+      setHabits((prev) => prev.map((h) => (h.id === id ? updated : h)));
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.message || 'Erro ao atualizar hábito');
+    }
+  }
+
+  async function salvarHabito() {
+    if (!novoHabito.trim()) {
+      Alert.alert('Atenção', 'Preencha o nome do hábito.');
       return;
     }
 
-    if (editandoId) {
-      // Edição: só salva e fecha
-      setHabits((prev) =>
-        prev.map((item) =>
-          item.id === editandoId
-            ? {
-                ...item,
-                titulo: novaMeta,
-                habitName: novoHabito,
-                title: novoHabito,
-                periodo,
-                tipoHabito: frequencia,
-              }
-            : item
-        )
-      );
-      fecharModal();
-    } else {
-      const novaMetaCriada = {
-        id: String(Date.now()),
-        titulo: novaMeta,
-        habitName: novoHabito,
-        title: novoHabito,
-        done: false,
-        periodo,
-        tipoHabito: frequencia,
-        percentual: 0,
-        status: 'Em andamento',
-      };
+    try {
+      if (editandoId) {
+        const updated = await updateHabit(editandoId, { title: novoHabito });
+        setHabits((prev) => prev.map((h) => (h.id === editandoId ? updated : h)));
+        fecharModal();
+        return;
+      }
 
-      setHabits((prev) => [...prev, novaMetaCriada]);
+      const created = await createHabit({ title: novoHabito });
+      setHabits((prev) => [...prev, created]);
       fecharModal();
       setConcluidoVisible(true);
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.message || 'Erro ao salvar hábito');
     }
   }
 
@@ -137,15 +107,24 @@ export default function Home({ navigation }) {
     setMenuAberto(false);
     setExcluirVisible(true);
   }
-  
+
+  async function confirmarExcluir() {
+    try {
+      if (!itemSelecionado?.id) return;
+      await deleteHabit(itemSelecionado.id);
+      setHabits((prev) => prev.filter((h) => h.id !== itemSelecionado.id));
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.message || 'Erro ao excluir hábito');
+    } finally {
+      setItemSelecionado(null);
+      setExcluirVisible(false);
+    }
+  }
 
   function editarHabito(item) {
     if (!item) return;
     setEditandoId(item.id);
-    setNovaMeta(item.titulo || '');
-    setNovoHabito(item.habitName || item.title || '');
-    setPeriodo(item.periodo || '1 Mês (30 Dias)');
-    setFrequencia(item.tipoHabito || 'Diário');
+    setNovoHabito(item.title || '');
     setMenuAberto(false);
     setItemSelecionado(null);
     setModalVisible(true);
@@ -204,7 +183,7 @@ export default function Home({ navigation }) {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Hábitos de hoje</Text>
 
-          <TouchableOpacity onPress={() => navigation.navigate('AllHabits', { habits })}>
+          <TouchableOpacity onPress={() => navigation.navigate('AllHabits')}>
             <Text style={styles.seeAll}>Ver todos</Text>
           </TouchableOpacity>
         </View>
@@ -214,6 +193,8 @@ export default function Home({ navigation }) {
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
           renderItem={renderHabit}
+          refreshing={loadingHabits}
+          onRefresh={carregarHabitos}
         />
       </View>
 
@@ -226,14 +207,14 @@ export default function Home({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {habits.map((item) => (
-          <View key={item.id} style={styles.goalItem}>
+        {mockGoals.slice(0, 3).map((goal) => (
+          <View key={String(goal.id)} style={styles.goalItem}>
             <View>
-              <Text style={styles.goalTitle}>{item.titulo || 'Meta sem nome'}</Text>
-              <Text style={styles.goalSubtitle}>{item.habitName || item.title}</Text>
+              <Text style={styles.goalTitle}>{goal.titulo}</Text>
+              <Text style={styles.goalSubtitle}>{goal.habitName}</Text>
             </View>
 
-            <Text style={styles.goalPercent}>{item.done ? '100%' : '0%'}</Text>
+            <Text style={styles.goalPercent}>{goal.percentual}%</Text>
           </View>
         ))}
       </View>
@@ -247,14 +228,13 @@ export default function Home({ navigation }) {
           <Text style={styles.navIconActive}>⌂</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Progress')}>
-          <Text style={styles.navIcon}>⌁</Text>
+          <Text style={styles.navIcon}>⌓</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Configuracoes')}>
           <Text style={styles.navIcon}>⚙</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Modal: Menu de opções (Editar / Excluir) ── */}
       <Modal
         visible={menuAberto}
         transparent
@@ -278,7 +258,6 @@ export default function Home({ navigation }) {
         </TouchableOpacity>
       </Modal>
 
-      {/* ── Modal: Formulário criar / editar ── */}
       <Modal
         visible={modalVisible}
         transparent
@@ -292,49 +271,23 @@ export default function Home({ navigation }) {
           <View style={styles.modalBox}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                {editandoId ? 'Editar meta de hábito' : 'Criar nova meta de hábito'}
+                {editandoId ? 'Editar hábito' : 'Criar hábito'}
               </Text>
-
               <TouchableOpacity onPress={fecharModal}>
                 <Text style={styles.closeButton}>×</Text>
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-              <Text style={styles.inputLabel}>Sua meta</Text>
-              <TextInput
-                style={styles.input}
-                value={novaMeta}
-                onChangeText={setNovaMeta}
-                placeholder="Ex: Melhorar minha saúde"
-                placeholderTextColor="#999"
-              />
-
+            <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={styles.inputLabel}>Nome do hábito</Text>
               <TextInput
                 style={styles.input}
                 value={novoHabito}
                 onChangeText={setNovoHabito}
-                placeholder="Ex: Beber 3L de água"
-                placeholderTextColor="#999"
+                placeholder="Ex: Beber 2L de água"
               />
 
-              <Text style={styles.inputLabel}>Período</Text>
-              <TouchableOpacity style={styles.selectBox}>
-                <Text style={styles.selectText}>{periodo}</Text>
-                <Text style={styles.selectArrow}>⌄</Text>
-              </TouchableOpacity>
-
-              <Text style={styles.inputLabel}>Frequência</Text>
-              <TouchableOpacity style={styles.selectBox}>
-                <Text style={styles.selectText}>{frequencia}</Text>
-                <Text style={styles.selectArrow}>⌄</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.createButton}
-                onPress={criarOuEditarMeta}
-              >
+              <TouchableOpacity style={styles.createButton} onPress={salvarHabito}>
                 <Text style={styles.createButtonText}>
                   {editandoId ? 'Salvar alterações' : 'Criar'}
                 </Text>
@@ -344,20 +297,11 @@ export default function Home({ navigation }) {
         </KeyboardAvoidingView>
       </Modal>
 
-      <HabitConcluido
-        visible={concluidoVisible}
-        onOk={() => setConcluidoVisible(false)}
-      />
+      <HabitConcluido visible={concluidoVisible} onOk={() => setConcluidoVisible(false)} />
 
       <ExcluirConfirmacao
         visible={excluirVisible}
-        onConfirm={() => {
-          if (itemSelecionado) {
-            setHabits((prev) => prev.filter((item) => item.id !== itemSelecionado.id));
-          }
-          setItemSelecionado(null);
-          setExcluirVisible(false);
-        }}
+        onConfirm={confirmarExcluir}
         onCancel={() => {
           setItemSelecionado(null);
           setExcluirVisible(false);
@@ -390,26 +334,24 @@ const styles = StyleSheet.create({
     color: '#32B956',
   },
   progressCard: {
-    backgroundColor: '#39B54A',
-    borderRadius: 6,
-    padding: 26,
+    backgroundColor: '#2CB84B',
+    borderRadius: 10,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 22,
   },
   circle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 10,
-    borderColor: '#E9F8EC',
-    backgroundColor: '#39B54A',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 22,
+    marginRight: 12,
   },
   circleText: {
-    color: '#fff',
+    color: '#2CB84B',
     fontSize: 18,
     fontWeight: '800',
   },
@@ -434,6 +376,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     minHeight: 70,
+    marginBottom: 22,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -633,25 +576,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 18,
     color: '#222',
-  },
-  selectBox: {
-    height: 42,
-    backgroundColor: '#E5E5E5',
-    borderRadius: 3,
-    paddingHorizontal: 12,
-    marginBottom: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  selectText: {
-    color: '#333',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  selectArrow: {
-    color: '#555',
-    fontSize: 18,
   },
   createButton: {
     height: 48,

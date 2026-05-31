@@ -1,8 +1,10 @@
 const HabitService = require('../services/habitService');
 const habitModel = require('../models/habitModel');
+const HabitRepository = require('../repositories/habitRepository');
 
 const makeHabitService = () => {
-  return new HabitService(habitModel);
+  const habitRepository = new HabitRepository(habitModel);
+  return new HabitService(habitRepository);
 };
 
 module.exports = {
