@@ -29,7 +29,10 @@ const Signup = ({ navigation }) => {
   const handleSignup = async () => {
     try {
       await api.post('/auth/register', { name, email, password });
-      login({ name, email });
+      // Faz login de verdade para obter o JWT e liberar rotas protegidas
+      const response = await api.post('/auth/login', { email, password });
+      const { user, token } = response.data;
+      login({ user, token });
       navigation.navigate('Home');
 
     } catch (error) {

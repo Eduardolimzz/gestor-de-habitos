@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
+import { getAuthToken } from './authToken';
 
 // Pega o IP do computador automaticamente via Expo — funciona em qualquer máquina
 const host =
@@ -15,6 +16,11 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   console.log(`[API] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
   return config;
 });
