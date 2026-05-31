@@ -46,7 +46,7 @@ const Progress = ({ navigation }) => {
 
   useEffect(() => {
     api.get('/goals')
-      .then(res => setGoals(res.data))
+      .then(res => setGoals(res.data.goals ?? []))
       .catch(err => console.error('Erro ao buscar metas:', err))
       .finally(() => setLoading(false));
   }, []);

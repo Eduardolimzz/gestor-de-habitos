@@ -58,10 +58,10 @@ function MetaItem({ goal, navigation, onDelete }) {
 const GoalsProgress = ({ navigation }) => {
   const [metas, setMetas] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
+     
     api.get('/goals')
-      .then(res => setMetas(res.data))
+      .then(res => setMetas(res.data.goals ?? []))    
       .catch(err => console.error('Erro ao buscar metas:', err))
       .finally(() => setLoading(false));
   }, []);
