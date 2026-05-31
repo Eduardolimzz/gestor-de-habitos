@@ -1,5 +1,8 @@
-class GoalService {
+const GoalServiceContract = require('./contracts/goalServiceContract');
+
+class GoalService extends GoalServiceContract {
   constructor(goalModel) {
+    super();
     this.goalModel = goalModel;
   }
 
