@@ -1,43 +1,53 @@
 const goals = [];
-let nextId = 1;
+let id = 1;
 
-const goalModel = {
-  findAllByUserId(userId) {
-    return goals.filter(g => g.userId === userId);
-  },
-
-  findById(id, userId) {
-    return goals.find(g => g.id === id && g.userId === userId) || null;
-  },
-
-  create(data) {
-    const goal = {
-      id: nextId++,
-      userId: data.userId,
-      name: data.name,
-      period: data.period || 'diario',
-      frequency: data.frequency || 1,
-      progress: 0,
-      status: 'ativo',
-      createdAt: new Date().toISOString(),
-    };
-    goals.push(goal);
-    return goal;
-  },
-
-  update(id, userId, data) {
-    const index = goals.findIndex(g => g.id === id && g.userId === userId);
-    if (index === -1) return null;
-    goals[index] = { ...goals[index], ...data };
-    return goals[index];
-  },
-
-  remove(id, userId) {
-    const index = goals.findIndex(g => g.id === id && g.userId === userId);
-    if (index === -1) return false;
-    goals.splice(index, 1);
-    return true;
-  },
+const findAllByUserId = (userId) => {
+  return goals.filter(goal => goal.userId === userId);
 };
 
-module.exports = goalModel;
+const findById = (goalId, userId) => {
+  return goals.find(
+    goal => goal.id === Number(goalId) && goal.userId === userId
+  ) || null;
+};
+
+const create = ({ name, userId, period, frequency }) => {
+  const newGoal = {
+    id: id++,
+    name,
+    userId,
+    period: period || 'diario',
+    frequency: frequency || 1,
+    progress: 0,
+    status: 'ativo',
+    createdAt: new Date(),
+  };
+  goals.push(newGoal);
+  return newGoal;
+};
+
+const update = (goalId, userId, data) => {
+  const goal = goals.find(
+    goal => goal.id === Number(goalId) && goal.userId === userId
+  );
+  if (!goal) return null;
+  Object.assign(goal, data);
+  return goal;
+};
+
+const remove = (goalId, userId) => {
+  const index = goals.findIndex(
+    goal => goal.id === Number(goalId) && goal.userId === userId
+  );
+  if (index === -1) return false;
+  goals.splice(index, 1);
+  return true;
+};
+
+module.exports = {
+  findAllByUserId,
+  findById,
+  create,
+  update,
+  remove,
+};
