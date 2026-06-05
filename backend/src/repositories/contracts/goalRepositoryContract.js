@@ -7,6 +7,10 @@ class GoalRepositoryContract {
     throw new Error('Method not implemented');
   }
 
+  findAllByHabitId(habitId, userId) {
+    throw new Error('Method not implemented');
+  }
+
   create(data) {
     throw new Error('Method not implemented');
   }

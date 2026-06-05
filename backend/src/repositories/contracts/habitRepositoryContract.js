@@ -3,6 +3,10 @@ class HabitRepositoryContract {
     throw new Error('Method not implemented');
   }
 
+  findById(id, userId) {
+    throw new Error('Method not implemented');
+  }
+
   create(data) {
     throw new Error('Method not implemented');
   }
@@ -17,4 +21,3 @@ class HabitRepositoryContract {
 }
 
 module.exports = HabitRepositoryContract;
-

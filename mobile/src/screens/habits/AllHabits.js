@@ -9,7 +9,14 @@ import {
   Alert,
 } from 'react-native';
 
-import { deleteHabit, listHabits, updateHabit } from '../../services/habits';
+import {
+  deleteHabit,
+  isHabitAvailableOnDate,
+  isHabitDoneOnDate,
+  listHabits,
+  toDateKey,
+  updateHabit,
+} from '../../services/habits';
 
 function buildDates() {
   const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -18,7 +25,12 @@ function buildDates() {
   for (let i = 0; i < 7; i++) {
     const d = new Date(hoje);
     d.setDate(hoje.getDate() - i);
-    dates.push({ id: String(i), dia: d.getDate(), mes: meses[d.getMonth()] });
+    dates.push({
+      id: String(i),
+      dia: d.getDate(),
+      mes: meses[d.getMonth()],
+      dateKey: toDateKey(d),
+    });
   }
   return dates;
 }
@@ -69,6 +81,13 @@ export default function AllHabits({ navigation }) {
   const [habits, setHabits] = useState([]);
   const [selectedDate, setSelectedDate] = useState(dates[0].id);
   const [loading, setLoading] = useState(false);
+  const selectedDateKey = dates.find((date) => date.id === selectedDate)?.dateKey || dates[0].dateKey;
+  const visibleHabits = habits
+    .filter((habit) => isHabitAvailableOnDate(habit, selectedDateKey))
+    .map((habit) => ({
+      ...habit,
+      done: isHabitDoneOnDate(habit, selectedDateKey),
+    }));
 
   async function carregarHabitos() {
     try {
@@ -90,7 +109,11 @@ export default function AllHabits({ navigation }) {
     try {
       const current = habits.find((h) => h.id === id);
       if (!current) return;
-      const updated = await updateHabit(id, { done: !current.done });
+      const doneOnSelectedDate = isHabitDoneOnDate(current, selectedDateKey);
+      const updated = await updateHabit(id, {
+        done: !doneOnSelectedDate,
+        date: selectedDateKey,
+      });
       setHabits((prev) => prev.map((h) => (h.id === id ? updated : h)));
     } catch (error) {
       Alert.alert('Erro', error.response?.data?.message || 'Erro ao atualizar hábito');
@@ -136,7 +159,7 @@ export default function AllHabits({ navigation }) {
       <Text style={styles.sectionTitle}>Hábitos</Text>
 
       <FlatList
-        data={habits}
+        data={visibleHabits}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <HabitRow item={item} onToggle={handleToggle} onDelete={handleDelete} />
@@ -221,4 +244,3 @@ const styles = StyleSheet.create({
   menuDelete: { fontSize: 14, fontWeight: '600', color: '#EF4444' },
   emptyText: { textAlign: 'center', color: '#9CA3AF', marginTop: 40, fontSize: 15 },
 });
-

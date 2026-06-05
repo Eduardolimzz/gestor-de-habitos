@@ -1,35 +1,172 @@
 const GoalServiceContract = require('./contracts/goalServiceContract');
+const { GOAL_PERIODS, GOAL_FREQUENCIES } = require('../constants/goalOptions');
+
+const ALLOWED_UPDATE_FIELDS = ['name', 'period', 'frequency', 'progress', 'status', 'habitId'];
+const GOAL_PERIOD_DAYS = {
+  '7 Dias': 7,
+  '15 Dias': 15,
+  '1 Mês (30 Dias)': 30,
+  '3 Meses': 90
+};
+
+function validationError(message) {
+  const error = new Error(message);
+  error.status = 400;
+  return error;
+}
 
 class GoalService extends GoalServiceContract {
-  constructor(goalModel) {
+  constructor(goalRepository, habitRepository = null) {
     super();
-    this.goalModel = goalModel;
+    this.goalRepository = goalRepository;
+    this.habitRepository = habitRepository;
   }
 
   list(userId) {
-    return this.goalModel.findAllByUserId(userId);
+    return this.goalRepository.findAllByUserId(userId);
   }
 
   create(userId, data) {
-    return this.goalModel.create({ ...data, userId });
+    this.validateCreate(data);
+    const habitId = this.validateHabitOwnership(userId, data.habitId);
+
+    return this.goalRepository.create({
+      name: data.name.trim(),
+      period: data.period,
+      frequency: data.frequency,
+      habitId,
+      userId
+    });
   }
 
   update(goalId, userId, data) {
-    const goal = this.goalModel.findById(goalId, userId);
-    if (!goal) throw new Error('Meta não encontrada');
-    return this.goalModel.update(goalId, userId, data);
+    const goal = this.goalRepository.findById(goalId, userId);
+    if (!goal) {
+      const error = new Error('Meta não encontrada');
+      error.status = 404;
+      throw error;
+    }
+
+    const updateData = this.buildUpdateData(userId, data);
+    return this.goalRepository.update(goalId, userId, updateData);
   }
 
   delete(goalId, userId) {
-    const goal = this.goalModel.findById(goalId, userId);
-    if (!goal) throw new Error('Meta não encontrada');
-    return this.goalModel.remove(goalId, userId);
+    const goal = this.goalRepository.findById(goalId, userId);
+    if (!goal) {
+      const error = new Error('Meta não encontrada');
+      error.status = 404;
+      throw error;
+    }
+    return this.goalRepository.remove(goalId, userId);
   }
 
   getById(goalId, userId) {
-    const goal = this.goalModel.findById(goalId, userId);
-    if (!goal) throw new Error('Meta não encontrada');
+    const goal = this.goalRepository.findById(goalId, userId);
+    if (!goal) {
+      const error = new Error('Meta não encontrada');
+      error.status = 404;
+      throw error;
+    }
     return goal;
+  }
+
+  updateProgressByHabitId(userId, habitId, completed) {
+    const habit = this.validateHabitOwnership(userId, habitId);
+    const linkedGoals = this.goalRepository.findAllByHabitId(habit, userId);
+    const linkedHabit = this.habitRepository.findById(habit, userId);
+
+    return linkedGoals.map((goal) => {
+      const nextProgress = this.calculateProgressFromHabitDates(goal, linkedHabit);
+      return this.goalRepository.update(goal.id, userId, {
+        progress: nextProgress,
+        status: nextProgress >= 100 ? 'concluido' : 'ativo'
+      });
+    });
+  }
+
+  validateCreate(data) {
+    if (!data?.name || !data.name.trim()) {
+      throw validationError('Nome da meta é obrigatório');
+    }
+
+    if (!data.period) {
+      throw validationError('Período da meta é obrigatório');
+    }
+
+    if (!GOAL_PERIODS.includes(data.period)) {
+      throw validationError(`Período inválido. Valores permitidos: ${GOAL_PERIODS.join(', ')}`);
+    }
+
+    if (!data.frequency) {
+      throw validationError('Frequência da meta é obrigatória');
+    }
+
+    if (!GOAL_FREQUENCIES.includes(data.frequency)) {
+      throw validationError(`Frequência inválida. Valores permitidos: ${GOAL_FREQUENCIES.join(', ')}`);
+    }
+  }
+
+  buildUpdateData(userId, data) {
+    const updateData = {};
+    const source = data || {};
+
+    ALLOWED_UPDATE_FIELDS.forEach((field) => {
+      if (source[field] !== undefined) {
+        updateData[field] = source[field];
+      }
+    });
+
+    if (updateData.name !== undefined) {
+      if (!updateData.name || !updateData.name.trim()) {
+        throw validationError('Nome da meta não pode ser vazio');
+      }
+      updateData.name = updateData.name.trim();
+    }
+
+    if (updateData.period !== undefined && !GOAL_PERIODS.includes(updateData.period)) {
+      throw validationError(`Período inválido. Valores permitidos: ${GOAL_PERIODS.join(', ')}`);
+    }
+
+    if (updateData.frequency !== undefined && !GOAL_FREQUENCIES.includes(updateData.frequency)) {
+      throw validationError(`Frequência inválida. Valores permitidos: ${GOAL_FREQUENCIES.join(', ')}`);
+    }
+
+    if (updateData.habitId !== undefined) {
+      updateData.habitId = this.validateHabitOwnership(userId, updateData.habitId);
+    }
+
+    return updateData;
+  }
+
+  validateHabitOwnership(userId, habitId) {
+    if (habitId === undefined || habitId === null || habitId === '') {
+      return null;
+    }
+
+    if (!this.habitRepository) {
+      throw validationError('Não foi possível validar o hábito vinculado');
+    }
+
+    const habit = this.habitRepository.findById(habitId, userId);
+    if (!habit) {
+      throw validationError('Hábito vinculado não encontrado para este usuário');
+    }
+
+    return habit.id;
+  }
+
+  getPeriodDays(period) {
+    return GOAL_PERIOD_DAYS[period] || 1;
+  }
+
+  calculateProgressFromHabitDates(goal, habit) {
+    const completedCount = Array.isArray(habit?.completedDates)
+      ? habit.completedDates.length
+      : 0;
+    const progress = (completedCount / this.getPeriodDays(goal.period)) * 100;
+
+    return Math.round(Math.min(100, Math.max(0, progress)));
   }
 }
 

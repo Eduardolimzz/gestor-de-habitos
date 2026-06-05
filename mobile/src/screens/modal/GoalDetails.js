@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { StyledContainer, InnerContainer } from '../../components/styles';
+import { formatGoalFrequency, isGoalCompleted } from '../../services/goals';
 
 function Dia({ numero, destaque = false, ativo = false }) {
   return (
@@ -43,6 +44,7 @@ const GoalDetails = ({ navigation, route }) => {
   const dataCriacao = goal.createdAt
     ? new Date(goal.createdAt).toLocaleDateString('pt-BR')
     : '—';
+  const concluida = isGoalCompleted(goal);
 
   return (
     <StyledContainer>
@@ -92,13 +94,13 @@ const GoalDetails = ({ navigation, route }) => {
           <View style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Text style={styles.goalName}>{goal.name}</Text>
-              <View style={[styles.doneBadge, goal.status === 'concluido' && styles.doneBadgeGreen]}>
-                <Text style={styles.doneBadgeText}>{goal.status}</Text>
+              <View style={[styles.doneBadge, concluida && styles.doneBadgeGreen]}>
+                <Text style={styles.doneBadgeText}>{concluida ? 'concluido' : 'ativo'}</Text>
               </View>
             </View>
 
             <InfoRow label="Período:" value={goal.period} />
-            <InfoRow label="Frequência:" value={`${goal.frequency}x`} />
+            <InfoRow label="Frequência:" value={formatGoalFrequency(goal.frequency)} />
             <InfoRow label="Progresso:" value={`${goal.progress}%`} />
             <InfoRow label="Criado em:" value={dataCriacao} />
           </View>

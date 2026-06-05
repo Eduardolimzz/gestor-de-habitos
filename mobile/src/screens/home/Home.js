@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -16,22 +16,33 @@ import {
 import ExcluirConfirmacao from '../modal/ExcluirConfirm';
 import HabitConcluido from '../habits/HabitConcluido';
 import { useAuth } from '../../context/AuthContext';
-import { createHabit, deleteHabit, listHabits, updateHabit } from '../../services/habits';
-import mockGoals from '../../data/mockGoals';
+import { createHabit, deleteHabit, listHabits, toDateKey, updateHabit } from '../../services/habits';
+import { createGoal, formatGoalFrequency, isGoalCompleted, listGoals } from '../../services/goals';
+import { useFocusEffect } from '@react-navigation/native';
+
+const PERIOD_OPTIONS = ['1 Mês (30 Dias)', '7 Dias', '15 Dias', '3 Meses'];
+const FREQUENCY_OPTIONS = ['Diário', 'Semanal', 'Mensal'];
 
 export default function Home({ navigation }) {
   const { user } = useAuth();
 
   const [habits, setHabits] = useState([]);
   const [loadingHabits, setLoadingHabits] = useState(false);
+  const [goals, setGoals] = useState([]);
+  const [loadingGoals, setLoadingGoals] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [goalModalVisible, setGoalModalVisible] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
   const [itemSelecionado, setItemSelecionado] = useState(null);
   const [excluirVisible, setExcluirVisible] = useState(false);
   const [concluidoVisible, setConcluidoVisible] = useState(false);
 
   const [novoHabito, setNovoHabito] = useState('');
+  const [novaMeta, setNovaMeta] = useState('');
+  const [nomeHabitoMeta, setNomeHabitoMeta] = useState('');
+  const [periodoMeta, setPeriodoMeta] = useState(PERIOD_OPTIONS[0]);
+  const [frequenciaMeta, setFrequenciaMeta] = useState(FREQUENCY_OPTIONS[0]);
   const [editandoId, setEditandoId] = useState(null);
 
   const completed = useMemo(() => habits.filter((h) => h.done).length, [habits]);
@@ -43,14 +54,26 @@ export default function Home({ navigation }) {
     setEditandoId(null);
   }
 
-  function abrirModalCriacao() {
-    limparFormulario();
-    setModalVisible(true);
-  }
-
   function fecharModal() {
     limparFormulario();
     setModalVisible(false);
+  }
+
+  function limparFormularioMeta() {
+    setNovaMeta('');
+    setNomeHabitoMeta('');
+    setPeriodoMeta(PERIOD_OPTIONS[0]);
+    setFrequenciaMeta(FREQUENCY_OPTIONS[0]);
+  }
+
+  function abrirModalMeta() {
+    limparFormularioMeta();
+    setGoalModalVisible(true);
+  }
+
+  function fecharModalMeta() {
+    limparFormularioMeta();
+    setGoalModalVisible(false);
   }
 
   async function carregarHabitos() {
@@ -69,12 +92,31 @@ export default function Home({ navigation }) {
     carregarHabitos();
   }, []);
 
+  async function carregarMetas() {
+    try {
+      setLoadingGoals(true);
+      const data = await listGoals();
+      setGoals(data);
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.message || 'Erro ao carregar metas');
+    } finally {
+      setLoadingGoals(false);
+    }
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      carregarMetas();
+    }, [])
+  );
+
   async function toggleHabit(id) {
     try {
       const current = habits.find((h) => h.id === id);
       if (!current) return;
-      const updated = await updateHabit(id, { done: !current.done });
+      const updated = await updateHabit(id, { done: !current.done, date: toDateKey() });
       setHabits((prev) => prev.map((h) => (h.id === id ? updated : h)));
+      await carregarMetas();
     } catch (error) {
       Alert.alert('Erro', error.response?.data?.message || 'Erro ao atualizar hábito');
     }
@@ -100,6 +142,33 @@ export default function Home({ navigation }) {
       setConcluidoVisible(true);
     } catch (error) {
       Alert.alert('Erro', error.response?.data?.message || 'Erro ao salvar hábito');
+    }
+  }
+
+  async function salvarMeta() {
+    if (!novaMeta.trim()) {
+      Alert.alert('Atenção', 'Preencha sua meta.');
+      return;
+    }
+
+    try {
+      const habitName = nomeHabitoMeta.trim();
+      const createdHabit = habitName ? await createHabit({ title: habitName }) : null;
+      const created = await createGoal({
+        name: novaMeta.trim(),
+        period: periodoMeta,
+        frequency: frequenciaMeta,
+        habitId: createdHabit?.id,
+      });
+
+      setGoals((prev) => [created, ...prev]);
+      if (createdHabit) {
+        setHabits((prev) => [...prev, createdHabit]);
+      }
+      fecharModalMeta();
+      setConcluidoVisible(true);
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.message || 'Erro ao criar meta');
     }
   }
 
@@ -207,19 +276,31 @@ export default function Home({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {mockGoals.slice(0, 3).map((goal) => (
-          <View key={String(goal.id)} style={styles.goalItem}>
-            <View>
-              <Text style={styles.goalTitle}>{goal.titulo}</Text>
-              <Text style={styles.goalSubtitle}>{goal.habitName}</Text>
-            </View>
+        {loadingGoals ? (
+          <Text style={styles.emptyText}>Carregando metas...</Text>
+        ) : goals.length === 0 ? (
+          <Text style={styles.emptyText}>Nenhuma meta cadastrada ainda.</Text>
+        ) : (
+          goals.slice(0, 3).map((goal) => (
+            <TouchableOpacity
+              key={String(goal.id)}
+              style={styles.goalItem}
+              onPress={() => navigation.navigate('GoalDetails', { goal })}
+            >
+              <View style={styles.goalInfo}>
+                <Text style={styles.goalTitle}>{goal.name}</Text>
+                <Text style={styles.goalSubtitle}>{goal.period} - {formatGoalFrequency(goal.frequency)}</Text>
+              </View>
 
-            <Text style={styles.goalPercent}>{goal.percentual}%</Text>
-          </View>
-        ))}
+              <Text style={[styles.goalPercent, isGoalCompleted(goal) && styles.goalPercentDone]}>
+                {goal.progress}%
+              </Text>
+            </TouchableOpacity>
+          ))
+        )}
       </View>
 
-      <TouchableOpacity style={styles.fab} onPress={abrirModalCriacao}>
+      <TouchableOpacity style={styles.fab} onPress={abrirModalMeta}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
 
@@ -291,6 +372,95 @@ export default function Home({ navigation }) {
                 <Text style={styles.createButtonText}>
                   {editandoId ? 'Salvar alterações' : 'Criar'}
                 </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={goalModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={fecharModalMeta}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalBox}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Criar meta</Text>
+              <TouchableOpacity onPress={fecharModalMeta}>
+                <Text style={styles.closeButton}>×</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.inputLabel}>Sua meta</Text>
+              <TextInput
+                style={styles.input}
+                value={novaMeta}
+                onChangeText={setNovaMeta}
+                placeholder="Ex: Beber água todos os dias"
+              />
+
+              <Text style={styles.inputLabel}>Nome do hábito</Text>
+              <TextInput
+                style={styles.input}
+                value={nomeHabitoMeta}
+                onChangeText={setNomeHabitoMeta}
+                placeholder="Ex: Beber 2L de água"
+              />
+
+              <Text style={styles.inputLabel}>Período</Text>
+              <View style={styles.optionGroup}>
+                {PERIOD_OPTIONS.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.optionButton,
+                      periodoMeta === option && styles.optionButtonSelected,
+                    ]}
+                    onPress={() => setPeriodoMeta(option)}
+                  >
+                    <Text
+                      style={[
+                        styles.optionButtonText,
+                        periodoMeta === option && styles.optionButtonTextSelected,
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>Frequência</Text>
+              <View style={styles.optionGroup}>
+                {FREQUENCY_OPTIONS.map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.optionButton,
+                      frequenciaMeta === option && styles.optionButtonSelected,
+                    ]}
+                    onPress={() => setFrequenciaMeta(option)}
+                  >
+                    <Text
+                      style={[
+                        styles.optionButtonText,
+                        frequenciaMeta === option && styles.optionButtonTextSelected,
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity style={styles.createButton} onPress={salvarMeta}>
+                <Text style={styles.createButtonText}>Criar</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -451,6 +621,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  goalInfo: {
+    flex: 1,
+    marginRight: 10,
+  },
   goalTitle: {
     fontSize: 15,
     fontWeight: '800',
@@ -465,6 +639,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     color: '#39B54A',
+  },
+  goalPercentDone: {
+    color: '#10B981',
+  },
+  emptyText: {
+    fontSize: 13,
+    color: '#777',
+    paddingVertical: 8,
   },
   fab: {
     position: 'absolute',
@@ -576,6 +758,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 18,
     color: '#222',
+  },
+  optionGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 18,
+  },
+  optionButton: {
+    minHeight: 38,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  optionButtonSelected: {
+    borderColor: '#38D952',
+    backgroundColor: '#EAF9EC',
+  },
+  optionButtonText: {
+    color: '#555',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  optionButtonTextSelected: {
+    color: '#1F8F3A',
   },
   createButton: {
     height: 48,

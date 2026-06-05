@@ -10,6 +10,10 @@ class HabitRepository extends HabitRepositoryContract {
     return this.habitModel.findAllByUserId(userId);
   }
 
+  findById(id, userId) {
+    return this.habitModel.findById(id, userId);
+  }
+
   create(data) {
     return this.habitModel.create(data);
   }
@@ -24,4 +28,3 @@ class HabitRepository extends HabitRepositoryContract {
 }
 
 module.exports = HabitRepository;
-

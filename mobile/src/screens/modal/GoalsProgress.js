@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { StyledContainer, InnerContainer } from '../../components/styles';
-import api from '../../services/api';
+import { deleteGoal, formatGoalFrequency, listGoals } from '../../services/goals';
+import { useFocusEffect } from '@react-navigation/native';
 
 function ProgressBar({ percentual }) {
   return (
@@ -49,7 +50,7 @@ function MetaItem({ goal, navigation, onDelete }) {
 
       <ProgressBar percentual={goal.progress ?? 0} />
 
-      <Text style={styles.metaSubtitulo}>{goal.period} — {goal.frequency}x</Text>
+      <Text style={styles.metaSubtitulo}>{goal.period} — {formatGoalFrequency(goal.frequency)}</Text>
       <Text style={styles.metaFrequencia}>{goal.status}</Text>
     </View>
   );
@@ -58,16 +59,28 @@ function MetaItem({ goal, navigation, onDelete }) {
 const GoalsProgress = ({ navigation }) => {
   const [metas, setMetas] = useState([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
-     
-    api.get('/goals')
-      .then(res => setMetas(res.data.goals ?? []))    
-      .catch(err => console.error('Erro ao buscar metas:', err))
-      .finally(() => setLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setLoading(true);
+
+      listGoals()
+        .then((data) => {
+          if (active) setMetas(data);
+        })
+        .catch(err => console.error('Erro ao buscar metas:', err))
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
 
   function handleDelete(id) {
-    api.delete(`/goals/${id}`)
+    deleteGoal(id)
       .then(() => setMetas(prev => prev.filter(item => item.id !== id)))
       .catch(err => console.error('Erro ao deletar meta:', err));
   }

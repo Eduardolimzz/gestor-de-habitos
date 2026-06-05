@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { StyledContainer, InnerContainer } from '../../components/styles';
-import api from '../../services/api';
+import { formatGoalFrequency, isGoalCompleted, listGoals } from '../../services/goals';
+import { useFocusEffect } from '@react-navigation/native';
 
 function MetaCard({ goal, navigation }) {
-  const concluido = goal.status === 'ativo' ? false : true;
+  const concluido = isGoalCompleted(goal);
   const percentual = goal.progress ?? 0;
 
   return (
@@ -28,7 +29,7 @@ function MetaCard({ goal, navigation }) {
 
       <View style={styles.metaInfo}>
         <Text style={styles.metaTitulo}>{goal.name}</Text>
-        <Text style={styles.metaSubtitulo}>{goal.period} — {goal.frequency}x</Text>
+        <Text style={styles.metaSubtitulo}>{goal.period} — {formatGoalFrequency(goal.frequency)}</Text>
       </View>
 
       <View style={[styles.badge, concluido ? styles.badgeCompleto : styles.badgeIncompleto]}>
@@ -44,17 +45,30 @@ const Progress = ({ navigation }) => {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    api.get('/goals')
-      .then(res => setGoals(res.data.goals ?? []))
-      .catch(err => console.error('Erro ao buscar metas:', err))
-      .finally(() => setLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setLoading(true);
 
-  const concluidas = goals.filter(g => g.status === 'concluido').length;
-  const nao_concluidas = goals.filter(g => g.status !== 'concluido').length;
+      listGoals()
+        .then((data) => {
+          if (active) setGoals(data);
+        })
+        .catch(err => console.error('Erro ao buscar metas:', err))
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+
+  const concluidas = goals.filter(isGoalCompleted).length;
+  const nao_concluidas = goals.length - concluidas;
   const percentualGeral = goals.length > 0
-    ? Math.round((concluidas / goals.length) * 100)
+    ? Math.round(goals.reduce((sum, goal) => sum + (goal.progress ?? 0), 0) / goals.length)
     : 0;
 
   const visibleGoals = goals.slice(0, 3);
@@ -88,6 +102,8 @@ const Progress = ({ navigation }) => {
 
               {loading ? (
                 <ActivityIndicator color="#10B981" style={{ marginTop: 20 }} />
+              ) : goals.length === 0 ? (
+                <Text style={styles.emptyText}>Nenhuma meta cadastrada ainda.</Text>
               ) : (
                 visibleGoals.map((goal) => (
                   <MetaCard key={goal.id} goal={goal} navigation={navigation} />
@@ -180,6 +196,7 @@ const styles = StyleSheet.create({
   metaInfo: { flex: 1 },
   metaTitulo: { fontSize: 18, fontWeight: '700', color: '#1F2937', marginBottom: 4 },
   metaSubtitulo: { fontSize: 15, color: '#4B5563' },
+  emptyText: { color: '#6B7280', fontSize: 15, textAlign: 'center', marginTop: 18 },
   badge: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18 },
   badgeCompleto: { backgroundColor: '#EAF9EC' },
   badgeIncompleto: { backgroundColor: '#F1F1F1' },

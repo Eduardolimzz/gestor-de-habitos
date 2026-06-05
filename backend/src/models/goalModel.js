@@ -11,11 +11,18 @@ const findById = (goalId, userId) => {
   ) || null;
 };
 
-const create = ({ name, userId, period, frequency }) => {
+const findAllByHabitId = (habitId, userId) => {
+  return goals.filter(
+    goal => goal.habitId === Number(habitId) && goal.userId === userId
+  );
+};
+
+const create = ({ name, userId, period, frequency, habitId }) => {
   const newGoal = {
     id: id++,
     name,
     userId,
+    habitId: habitId !== undefined ? Number(habitId) : null,
     period: period || 'diario',
     frequency: frequency || 1,
     progress: 0,
@@ -47,6 +54,7 @@ const remove = (goalId, userId) => {
 module.exports = {
   findAllByUserId,
   findById,
+  findAllByHabitId,
   create,
   update,
   remove,

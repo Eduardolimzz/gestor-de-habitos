@@ -18,6 +18,10 @@ class GoalServiceContract {
   getById(goalId, userId) {
     throw new Error('Method not implemented');
   }
+
+  updateProgressByHabitId(userId, habitId, completed) {
+    throw new Error('Method not implemented');
+  }
 }
 
 module.exports = GoalServiceContract;

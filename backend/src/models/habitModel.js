@@ -5,11 +5,18 @@ const findAllByUserId = (userId) => {
   return habits.filter(habit => habit.userId === userId);
 };
 
+const findById = (id, userId) => {
+  return habits.find(
+    habit => habit.id === Number(id) && habit.userId === userId
+  ) || null;
+};
+
 const create = ({ name, userId }) => {
   const newHabit = {
     id: id++,
     name,
     completed: false,
+    completedDates: [],
     userId,
     createdAt: new Date()
   };
@@ -42,6 +49,7 @@ const remove = (id, userId) => {
 
 module.exports = {
   findAllByUserId,
+  findById,
   create,
   update,
   remove
