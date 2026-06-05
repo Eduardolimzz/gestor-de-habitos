@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(120)
+  email     String   @unique @db.VarChar(160)
+  password  String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  habits      Habit[]
+  goals       Goal[]
+  completions HabitCompletion[]
+
+  @@map("users")
+}
+
+model Habit {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  name      String   @db.VarChar(160)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goals       Goal[]
+  completions HabitCompletion[]
+
+  @@map("habits")
+}
+
+model HabitCompletion {
+  id            Int      @id @default(autoincrement())
+  habitId       Int      @map("habit_id")
+  userId        Int      @map("user_id")
+  completedDate DateTime @map("completed_date") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, completedDate], map: "unique_habit_completion_date")
+  @@map("habit_completions")
+}
+
+model Goal {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  habitId   Int?     @map("habit_id")
+  name      String   @db.VarChar(180)
+  period    String   @db.VarChar(40)
+  frequency String   @db.VarChar(40)
+  progress  Int      @default(0)
+  status    String   @default("ativo") @db.VarChar(30)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit? @relation(fields: [habitId], references: [id], onDelete: SetNull)
+
+  @@map("goals")
+}

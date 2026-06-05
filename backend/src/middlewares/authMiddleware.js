@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
-const userModel = require('../models/userModel');
+const prisma = require('../database/prisma');
+const UserRepository = require('../repositories/userRepository');
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -22,7 +23,8 @@ const authMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, config.jwtSecret);
 
-    const user = userModel.findById(decoded.id);
+    const userRepository = new UserRepository(prisma);
+    const user = await userRepository.findById(decoded.id);
 
     if (!user) {
       return res.status(401).json({

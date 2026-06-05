@@ -1,23 +1,39 @@
 const UserRepositoryContract = require('./contracts/userRepositoryContract');
+const { toUser } = require('../models/userModel');
 
 class UserRepository extends UserRepositoryContract {
-  constructor(userModel) {
+  constructor(prisma) {
     super();
-    this.userModel = userModel;
+    this.prisma = prisma;
   }
 
-  create(user) {
-    return this.userModel.create(user);
+  async create(user) {
+    const createdUser = await this.prisma.user.create({
+      data: {
+        name: user.name,
+        email: user.email,
+        password: user.password
+      }
+    });
+
+    return toUser(createdUser);
   }
 
-  findByEmail(email) {
-    return this.userModel.findByEmail(email);
+  async findByEmail(email) {
+    const user = await this.prisma.user.findUnique({
+      where: { email }
+    });
+
+    return toUser(user);
   }
 
-  findById(id) {
-    return this.userModel.findById(id);
+  async findById(id) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: Number(id) }
+    });
+
+    return toUser(user);
   }
 }
 
 module.exports = UserRepository;
-

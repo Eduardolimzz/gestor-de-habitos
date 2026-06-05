@@ -14,7 +14,7 @@ class AuthService extends AuthServiceContract {
       throw new Error('Preencha todos os campos');
     }
 
-    const userExists = this.userRepository.findByEmail(email);
+    const userExists = await this.userRepository.findByEmail(email);
 
     if (userExists) {
       throw new Error('Usuário já existe');
@@ -22,7 +22,7 @@ class AuthService extends AuthServiceContract {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = this.userRepository.create({
+    const user = await this.userRepository.create({
       name,
       email,
       password: hashedPassword,
@@ -40,7 +40,7 @@ class AuthService extends AuthServiceContract {
       throw new Error('E-mail e senha são obrigatórios');
     }
 
-    const user = this.userRepository.findByEmail(email);
+    const user = await this.userRepository.findByEmail(email);
 
     if (!user) {
       throw new Error('Credenciais inválidas');
@@ -68,4 +68,3 @@ class AuthService extends AuthServiceContract {
 }
 
 module.exports = AuthService;
-
