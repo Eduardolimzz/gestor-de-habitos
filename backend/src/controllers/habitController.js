@@ -1,10 +1,10 @@
 const { makeHabitService } = require('../factories/habitFactory');
 
-const listHabits = (req, res) => {
+const listHabits = async (req, res) => {
   try {
     const habitService = makeHabitService();
 
-    const habits = habitService.list(req.user.id);
+    const habits = await habitService.list(req.user.id);
 
     return res.json(habits);
   } catch (error) {
@@ -14,11 +14,11 @@ const listHabits = (req, res) => {
   }
 };
 
-const createHabit = (req, res) => {
+const createHabit = async (req, res) => {
   try {
     const habitService = makeHabitService();
 
-    const habit = habitService.create({
+    const habit = await habitService.create({
       name: req.body.name,
       userId: req.user.id
     });
@@ -31,11 +31,11 @@ const createHabit = (req, res) => {
   }
 };
 
-const updateHabit = (req, res) => {
+const updateHabit = async (req, res) => {
   try {
     const habitService = makeHabitService();
 
-    const habit = habitService.update(
+    const habit = await habitService.update(
       req.params.id,
       req.user.id,
       req.body
@@ -49,11 +49,11 @@ const updateHabit = (req, res) => {
   }
 };
 
-const deleteHabit = (req, res) => {
+const deleteHabit = async (req, res) => {
   try {
     const habitService = makeHabitService();
 
-    habitService.delete(req.params.id, req.user.id);
+    await habitService.delete(req.params.id, req.user.id);
 
     return res.status(204).send();
   } catch (error) {

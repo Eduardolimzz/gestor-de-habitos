@@ -4,7 +4,7 @@ const { makeGoalService } = require('../factories/goalFactory');
 async function list(req, res) {
   try {
     const service = makeGoalService();
-    const goals = service.list(req.user.id);
+    const goals = await service.list(req.user.id);
     return res.status(200).json({ goals });
   } catch (err) {
     return res.status(err.status || 500).json({ message: err.message });
@@ -15,7 +15,7 @@ async function list(req, res) {
 async function getById(req, res) {
   try {
     const service = makeGoalService();
-    const goal = service.getById(req.params.id, req.user.id);
+    const goal = await service.getById(req.params.id, req.user.id);
     return res.status(200).json({ goal });
   } catch (err) {
     return res.status(err.status || 500).json({ message: err.message });
@@ -26,7 +26,7 @@ async function getById(req, res) {
 async function create(req, res) {
   try {
     const service = makeGoalService();
-    const goal = service.create(req.user.id, req.body);
+    const goal = await service.create(req.user.id, req.body);
     return res.status(201).json({ message: 'Meta criada com sucesso', goal });
   } catch (err) {
     return res.status(err.status || 500).json({ message: err.message });
@@ -37,7 +37,7 @@ async function create(req, res) {
 async function update(req, res) {
   try {
     const service = makeGoalService();
-    const goal = service.update(req.params.id, req.user.id, req.body);
+    const goal = await service.update(req.params.id, req.user.id, req.body);
     return res.status(200).json({ message: 'Meta atualizada com sucesso', goal });
   } catch (err) {
     return res.status(err.status || 500).json({ message: err.message });
@@ -48,7 +48,7 @@ async function update(req, res) {
 async function remove(req, res) {
   try {
     const service = makeGoalService();
-    const result = service.delete(req.params.id, req.user.id);
+    const result = await service.delete(req.params.id, req.user.id);
     return res.status(200).json(result);
   } catch (err) {
     return res.status(err.status || 500).json({ message: err.message });

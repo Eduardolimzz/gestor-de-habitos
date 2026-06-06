@@ -11,11 +11,11 @@ class HabitService extends HabitServiceContract {
     this.goalService = goalService;
   }
 
-  list(userId) {
+  async list(userId) {
     return this.habitRepository.findAllByUserId(userId);
   }
 
-  create({ name, userId }) {
+  async create({ name, userId }) {
     if (!name) {
       throw new Error('Nome do hábito é obrigatório');
     }
@@ -23,8 +23,8 @@ class HabitService extends HabitServiceContract {
     return this.habitRepository.create({ name, userId });
   }
 
-  update(id, userId, data) {
-    const currentHabit = this.habitRepository.findById(id, userId);
+  async update(id, userId, data) {
+    const currentHabit = await this.habitRepository.findById(id, userId);
 
     if (!currentHabit) {
       throw new Error('Hábito não encontrado');
@@ -56,21 +56,21 @@ class HabitService extends HabitServiceContract {
       delete updateData.date;
     }
 
-    const habit = this.habitRepository.update(id, userId, updateData);
+    const habit = await this.habitRepository.update(id, userId, updateData);
 
     if (!habit) {
       throw new Error('Hábito não encontrado');
     }
 
     if (completionChanged && this.goalService) {
-      this.goalService.updateProgressByHabitId(userId, id, data.completed);
+      await this.goalService.updateProgressByHabitId(userId, id, data.completed);
     }
 
     return habit;
   }
 
-  delete(id, userId) {
-    const removed = this.habitRepository.remove(id, userId);
+  async delete(id, userId) {
+    const removed = await this.habitRepository.remove(id, userId);
 
     if (!removed) {
       throw new Error('Hábito não encontrado');

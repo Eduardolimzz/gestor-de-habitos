@@ -26,9 +26,9 @@ class GoalService extends GoalServiceContract {
     return this.goalRepository.findAllByUserId(userId);
   }
 
-  create(userId, data) {
+  async create(userId, data) {
     this.validateCreate(data);
-    const habitId = this.validateHabitOwnership(userId, data.habitId);
+    const habitId = await this.validateHabitOwnership(userId, data.habitId);
 
     return this.goalRepository.create({
       name: data.name.trim(),
@@ -39,7 +39,7 @@ class GoalService extends GoalServiceContract {
     });
   }
 
-  update(goalId, userId, data) {
+  async update(goalId, userId, data) {
     const goal = this.goalRepository.findById(goalId, userId);
     if (!goal) {
       const error = new Error('Meta não encontrada');
@@ -47,11 +47,11 @@ class GoalService extends GoalServiceContract {
       throw error;
     }
 
-    const updateData = this.buildUpdateData(userId, data);
+    const updateData = await this.buildUpdateData(userId, data);
     return this.goalRepository.update(goalId, userId, updateData);
   }
 
-  delete(goalId, userId) {
+  async delete(goalId, userId) {
     const goal = this.goalRepository.findById(goalId, userId);
     if (!goal) {
       const error = new Error('Meta não encontrada');
@@ -61,7 +61,7 @@ class GoalService extends GoalServiceContract {
     return this.goalRepository.remove(goalId, userId);
   }
 
-  getById(goalId, userId) {
+  async getById(goalId, userId) {
     const goal = this.goalRepository.findById(goalId, userId);
     if (!goal) {
       const error = new Error('Meta não encontrada');
@@ -71,10 +71,10 @@ class GoalService extends GoalServiceContract {
     return goal;
   }
 
-  updateProgressByHabitId(userId, habitId, completed) {
-    const habit = this.validateHabitOwnership(userId, habitId);
+  async updateProgressByHabitId(userId, habitId, completed) {
+    const habit = await this.validateHabitOwnership(userId, habitId);
     const linkedGoals = this.goalRepository.findAllByHabitId(habit, userId);
-    const linkedHabit = this.habitRepository.findById(habit, userId);
+    const linkedHabit = await this.habitRepository.findById(habit, userId);
 
     return linkedGoals.map((goal) => {
       const nextProgress = this.calculateProgressFromHabitDates(goal, linkedHabit);
@@ -107,7 +107,7 @@ class GoalService extends GoalServiceContract {
     }
   }
 
-  buildUpdateData(userId, data) {
+  async buildUpdateData(userId, data) {
     const updateData = {};
     const source = data || {};
 
@@ -133,13 +133,13 @@ class GoalService extends GoalServiceContract {
     }
 
     if (updateData.habitId !== undefined) {
-      updateData.habitId = this.validateHabitOwnership(userId, updateData.habitId);
+      updateData.habitId = await this.validateHabitOwnership(userId, updateData.habitId);
     }
 
     return updateData;
   }
 
-  validateHabitOwnership(userId, habitId) {
+  async validateHabitOwnership(userId, habitId) {
     if (habitId === undefined || habitId === null || habitId === '') {
       return null;
     }
@@ -148,7 +148,7 @@ class GoalService extends GoalServiceContract {
       throw validationError('Não foi possível validar o hábito vinculado');
     }
 
-    const habit = this.habitRepository.findById(habitId, userId);
+    const habit = await this.habitRepository.findById(habitId, userId);
     if (!habit) {
       throw validationError('Hábito vinculado não encontrado para este usuário');
     }
