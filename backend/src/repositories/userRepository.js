@@ -1,8 +1,9 @@
 const UserRepositoryContract = require('./contracts/userRepositoryContract');
 const { toUser } = require('../models/userModel');
+const defaultPrisma = require('../database/prisma');
 
 class UserRepository extends UserRepositoryContract {
-  constructor(prisma) {
+  constructor(prisma = defaultPrisma) {
     super();
     this.prisma = prisma;
   }

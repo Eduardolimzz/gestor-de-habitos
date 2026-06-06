@@ -1,8 +1,9 @@
 const HabitRepositoryContract = require('./contracts/habitRepositoryContract');
 const { toDateKey, toHabit } = require('../models/habitModel');
+const defaultPrisma = require('../database/prisma');
 
 class HabitRepository extends HabitRepositoryContract {
-  constructor(prisma) {
+  constructor(prisma = defaultPrisma) {
     super();
     this.prisma = prisma;
   }

@@ -1,33 +1,83 @@
 const GoalRepositoryContract = require('./contracts/goalRepositoryContract');
+const { toGoal } = require('../models/goalModel');
+const defaultPrisma = require('../database/prisma');
 
 class GoalRepository extends GoalRepositoryContract {
-  constructor(goalModel) {
+  constructor(prisma = defaultPrisma) {
     super();
-    this.goalModel = goalModel;
+    this.prisma = prisma;
   }
 
-  findAllByUserId(userId) {
-    return this.goalModel.findAllByUserId(userId);
+  async findAllByUserId(userId) {
+    const goals = await this.prisma.goal.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return goals.map(toGoal);
   }
 
-  findById(id, userId) {
-    return this.goalModel.findById(id, userId);
+  async findById(id, userId) {
+    const goal = await this.prisma.goal.findFirst({
+      where: {
+        id: Number(id),
+        userId
+      }
+    });
+
+    return toGoal(goal);
   }
 
-  findAllByHabitId(habitId, userId) {
-    return this.goalModel.findAllByHabitId(habitId, userId);
+  async findAllByHabitId(habitId, userId) {
+    const goals = await this.prisma.goal.findMany({
+      where: {
+        habitId: Number(habitId),
+        userId
+      }
+    });
+
+    return goals.map(toGoal);
   }
 
-  create(data) {
-    return this.goalModel.create(data);
+  async create(data) {
+    const goal = await this.prisma.goal.create({
+      data: {
+        name: data.name,
+        userId: data.userId,
+        habitId: data.habitId,
+        period: data.period,
+        frequency: data.frequency,
+        progress: data.progress ?? 0,
+        status: data.status ?? 'ativo'
+      }
+    });
+
+    return toGoal(goal);
   }
 
-  update(id, userId, data) {
-    return this.goalModel.update(id, userId, data);
+  async update(id, userId, data) {
+    const goal = await this.findById(id, userId);
+
+    if (!goal) return null;
+
+    const updatedGoal = await this.prisma.goal.update({
+      where: { id: Number(id) },
+      data
+    });
+
+    return toGoal(updatedGoal);
   }
 
-  remove(id, userId) {
-    return this.goalModel.remove(id, userId);
+  async remove(id, userId) {
+    const goal = await this.findById(id, userId);
+
+    if (!goal) return false;
+
+    await this.prisma.goal.delete({
+      where: { id: Number(id) }
+    });
+
+    return true;
   }
 }
 

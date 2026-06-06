@@ -48,8 +48,8 @@ async function update(req, res) {
 async function remove(req, res) {
   try {
     const service = makeGoalService();
-    const result = await service.delete(req.params.id, req.user.id);
-    return res.status(200).json(result);
+    await service.delete(req.params.id, req.user.id);
+    return res.status(200).json({ message: 'Meta removida com sucesso' });
   } catch (err) {
     return res.status(err.status || 500).json({ message: err.message });
   }

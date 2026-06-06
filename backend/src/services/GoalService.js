@@ -22,7 +22,7 @@ class GoalService extends GoalServiceContract {
     this.habitRepository = habitRepository;
   }
 
-  list(userId) {
+  async list(userId) {
     return this.goalRepository.findAllByUserId(userId);
   }
 
@@ -40,7 +40,7 @@ class GoalService extends GoalServiceContract {
   }
 
   async update(goalId, userId, data) {
-    const goal = this.goalRepository.findById(goalId, userId);
+    const goal = await this.goalRepository.findById(goalId, userId);
     if (!goal) {
       const error = new Error('Meta não encontrada');
       error.status = 404;
@@ -52,7 +52,7 @@ class GoalService extends GoalServiceContract {
   }
 
   async delete(goalId, userId) {
-    const goal = this.goalRepository.findById(goalId, userId);
+    const goal = await this.goalRepository.findById(goalId, userId);
     if (!goal) {
       const error = new Error('Meta não encontrada');
       error.status = 404;
@@ -62,7 +62,7 @@ class GoalService extends GoalServiceContract {
   }
 
   async getById(goalId, userId) {
-    const goal = this.goalRepository.findById(goalId, userId);
+    const goal = await this.goalRepository.findById(goalId, userId);
     if (!goal) {
       const error = new Error('Meta não encontrada');
       error.status = 404;
@@ -73,16 +73,16 @@ class GoalService extends GoalServiceContract {
 
   async updateProgressByHabitId(userId, habitId, completed) {
     const habit = await this.validateHabitOwnership(userId, habitId);
-    const linkedGoals = this.goalRepository.findAllByHabitId(habit, userId);
+    const linkedGoals = await this.goalRepository.findAllByHabitId(habit, userId);
     const linkedHabit = await this.habitRepository.findById(habit, userId);
 
-    return linkedGoals.map((goal) => {
+    return Promise.all(linkedGoals.map((goal) => {
       const nextProgress = this.calculateProgressFromHabitDates(goal, linkedHabit);
       return this.goalRepository.update(goal.id, userId, {
         progress: nextProgress,
         status: nextProgress >= 100 ? 'concluido' : 'ativo'
       });
-    });
+    }));
   }
 
   validateCreate(data) {
