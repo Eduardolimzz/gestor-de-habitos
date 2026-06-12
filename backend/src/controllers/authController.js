@@ -1,51 +1,37 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-
-const { createUser, findUserByEmail } = require('../models/userModel');
+const { makeAuthService } = require('../factories/authFactory');
 
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const authService = makeAuthService();
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Preencha todos os campos' });
+    const user = await authService.register(req.body);
+
+    return res.status(201).json({
+      message: 'Usuário criado com sucesso',
+      user
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message
+    });
   }
-
-  const userExists = findUserByEmail(email);
-  if (userExists) {
-    return res.status(400).json({ message: 'Usuário já existe' });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const newUser = createUser({
-    id: Date.now(),
-    name,
-    email,
-    password: hashedPassword
-  });
-
-  res.status(201).json({ message: 'Usuário criado', user: newUser });
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const authService = makeAuthService();
 
-  const user = findUserByEmail(email);
-  if (!user) {
-    return res.status(400).json({ message: 'Usuário não encontrado' });
+    const data = await authService.login(req.body);
+
+    return res.json({
+      message: 'Login realizado com sucesso',
+      ...data
+    });
+  } catch (error) {
+    return res.status(401).json({
+      message: error.message
+    });
   }
-
-  const valid = await bcrypt.compare(password, user.password);
-
-  if (!valid) {
-    return res.status(400).json({ message: 'Senha inválida' });
-  }
-
-  const token = jwt.sign({ id: user.id }, 'segredo', {
-    expiresIn: '1d'
-  });
-
-  res.json({ message: 'Login ok', token, user: { name: user.name, email: user.email } });
 };
 
 module.exports = {

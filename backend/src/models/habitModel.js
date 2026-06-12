@@ -1,20 +1,26 @@
-let habits = [];
-let id = 1;
+const toDateKey = (date = new Date()) => {
+  return new Date(date).toISOString().split('T')[0];
+};
 
-const getAllHabits = () => habits;
+const toHabit = (habit, referenceDate = new Date()) => {
+  if (!habit) return null;
 
-const createHabit = (nome) => {
-  const newHabit = {
-    id: id++,
-    nome,
-    concluido: false
+  const completedDates = Array.isArray(habit.completions)
+    ? habit.completions.map((completion) => toDateKey(completion.completedDate))
+    : [];
+  const today = toDateKey(referenceDate);
+
+  return {
+    id: habit.id,
+    name: habit.name,
+    completed: completedDates.includes(today),
+    completedDates,
+    userId: habit.userId,
+    createdAt: habit.createdAt
   };
-
-  habits.push(newHabit);
-  return newHabit;
 };
 
 module.exports = {
-  getAllHabits,
-  createHabit
+  toDateKey,
+  toHabit
 };

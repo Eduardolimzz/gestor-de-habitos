@@ -33,8 +33,8 @@ const Login = ({ navigation }) => {
 
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { user } = response.data;
-      login(user);
+      const { user, token } = response.data;
+      login({ user, token });
       navigation.navigate('Home');
     } catch (error) {
       Alert.alert('Erro', error.response?.data?.message || 'Erro ao fazer login');

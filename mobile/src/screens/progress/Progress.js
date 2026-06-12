@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { StyledContainer, InnerContainer } from '../../components/styles';
-import mockGoals from '../../data/mockGoals';
+import { formatGoalFrequency, isGoalCompleted, listGoals } from '../../services/goals';
+import { useFocusEffect } from '@react-navigation/native';
 
 function MetaCard({ goal, navigation }) {
-  const concluido = goal.status === 'Concluído';
+  const concluido = isGoalCompleted(goal);
+  const percentual = goal.progress ?? 0;
 
   return (
     <TouchableOpacity
@@ -18,29 +21,19 @@ function MetaCard({ goal, navigation }) {
       onPress={() => navigation.navigate('GoalDetails', { goal })}
       activeOpacity={0.85}
     >
-      <View style={[styles.circleSmall, { borderColor: goal.cor }]}>
-        <Text style={[styles.circleSmallText, { color: goal.cor }]}>
-          {goal.percentual}%
+      <View style={[styles.circleSmall, { borderColor: concluido ? '#10B981' : '#D1D5DB' }]}>
+        <Text style={[styles.circleSmallText, { color: concluido ? '#10B981' : '#6B7280' }]}>
+          {percentual}%
         </Text>
       </View>
 
       <View style={styles.metaInfo}>
-        <Text style={styles.metaTitulo}>{goal.titulo}</Text>
-        <Text style={styles.metaSubtitulo}>{goal.subtitulo}</Text>
+        <Text style={styles.metaTitulo}>{goal.name}</Text>
+        <Text style={styles.metaSubtitulo}>{goal.period} — {formatGoalFrequency(goal.frequency)}</Text>
       </View>
 
-      <View
-        style={[
-          styles.badge,
-          concluido ? styles.badgeCompleto : styles.badgeIncompleto,
-        ]}
-      >
-        <Text
-          style={[
-            styles.badgeText,
-            concluido ? styles.badgeTextCompleto : styles.badgeTextIncompleto,
-          ]}
-        >
+      <View style={[styles.badge, concluido ? styles.badgeCompleto : styles.badgeIncompleto]}>
+        <Text style={[styles.badgeText, concluido ? styles.badgeTextCompleto : styles.badgeTextIncompleto]}>
           {goal.status}
         </Text>
       </View>
@@ -48,8 +41,37 @@ function MetaCard({ goal, navigation }) {
   );
 }
 
-const Welcome = ({ navigation }) => {
-  const visibleGoals = mockGoals.slice(0, 3);
+const Progress = ({ navigation }) => {
+  const [goals, setGoals] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setLoading(true);
+
+      listGoals()
+        .then((data) => {
+          if (active) setGoals(data);
+        })
+        .catch(err => console.error('Erro ao buscar metas:', err))
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+
+  const concluidas = goals.filter(isGoalCompleted).length;
+  const nao_concluidas = goals.length - concluidas;
+  const percentualGeral = goals.length > 0
+    ? Math.round(goals.reduce((sum, goal) => sum + (goal.progress ?? 0), 0) / goals.length)
+    : 0;
+
+  const visibleGoals = goals.slice(0, 3);
 
   return (
     <View style={styles.screen}>
@@ -57,7 +79,6 @@ const Welcome = ({ navigation }) => {
         <ScrollView showsVerticalScrollIndicator={false}>
           <InnerContainer>
             <Text style={styles.pageTitle}>Progresso</Text>
-
             <Text style={styles.sectionTitle}>Relatório de progresso</Text>
 
             <View style={styles.mainCard}>
@@ -71,17 +92,23 @@ const Welcome = ({ navigation }) => {
               <View style={styles.progressWrapper}>
                 <View style={styles.circleOuter}>
                   <View style={styles.circleInner}>
-                    <Text style={styles.percentText}>60%</Text>
+                    <Text style={styles.percentText}>{percentualGeral}%</Text>
                   </View>
                 </View>
               </View>
 
-              <Text style={styles.okText}>✓ 11 Metas foram alcançadas</Text>
-              <Text style={styles.badText}>✕ 6 Metas não foram alcançadas</Text>
+              <Text style={styles.okText}>✓ {concluidas} Metas foram alcançadas</Text>
+              <Text style={styles.badText}>✕ {nao_concluidas} Metas não foram alcançadas</Text>
 
-              {visibleGoals.map((goal) => (
-                <MetaCard key={goal.id} goal={goal} navigation={navigation} />
-              ))}
+              {loading ? (
+                <ActivityIndicator color="#10B981" style={{ marginTop: 20 }} />
+              ) : goals.length === 0 ? (
+                <Text style={styles.emptyText}>Nenhuma meta cadastrada ainda.</Text>
+              ) : (
+                visibleGoals.map((goal) => (
+                  <MetaCard key={goal.id} goal={goal} navigation={navigation} />
+                ))
+              )}
             </View>
           </InnerContainer>
         </ScrollView>
@@ -102,12 +129,10 @@ const Welcome = ({ navigation }) => {
   );
 };
 
-export default Welcome;
+export default Progress;
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
+  screen: { flex: 1 },
   bottomNav: {
     height: 52,
     backgroundColor: '#fff',
@@ -117,14 +142,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#EEE',
   },
-  navIcon: {
-    fontSize: 24,
-    color: '#999',
-  },
-  navIconActive: {
-    fontSize: 24,
-    color: '#39B54A',
-  },
+  navIcon: { fontSize: 24, color: '#999' },
+  navIconActive: { fontSize: 24, color: '#39B54A' },
   pageTitle: {
     fontSize: 30,
     fontWeight: 'bold',
@@ -132,60 +151,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 28,
   },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 22,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  monthButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E5E7EB',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  monthButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1F2937',
-    marginRight: 8,
-  },
-  monthArrow: {
-    fontSize: 18,
-    color: '#1F2937',
-  },
-  mainCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 20,
-  },
+  sectionTitle: { fontSize: 18, fontWeight: '600', color: '#1F2937' },
+  mainCard: { backgroundColor: '#fff', borderRadius: 24, padding: 20 },
   headerCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
   },
-  mainCardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  verTodas: {
-    color: '#7ED957',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  progressWrapper: {
-    alignItems: 'center',
-    marginVertical: 20,
-  },
+  mainCardTitle: { fontSize: 20, fontWeight: '700', color: '#1F2937' },
+  verTodas: { color: '#7ED957', fontWeight: '600', fontSize: 16 },
+  progressWrapper: { alignItems: 'center', marginVertical: 20 },
   circleOuter: {
     width: 180,
     height: 180,
@@ -199,26 +175,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     transform: [{ rotate: '-45deg' }],
   },
-  circleInner: {
-    transform: [{ rotate: '45deg' }],
-  },
-  percentText: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#10B981',
-  },
-  okText: {
-    color: '#10B981',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  badText: {
-    color: '#EF4444',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 18,
-  },
+  circleInner: { transform: [{ rotate: '45deg' }] },
+  percentText: { fontSize: 30, fontWeight: 'bold', color: '#10B981' },
+  okText: { color: '#10B981', fontSize: 16, fontWeight: '600', marginBottom: 8 },
+  badText: { color: '#EF4444', fontSize: 16, fontWeight: '600', marginBottom: 18 },
   metaCard: {
     backgroundColor: '#FAFAFA',
     borderRadius: 18,
@@ -228,50 +188,19 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   circleSmall: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    borderWidth: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
+    width: 62, height: 62, borderRadius: 31,
+    borderWidth: 4, justifyContent: 'center',
+    alignItems: 'center', marginRight: 14,
   },
-  circleSmallText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  metaInfo: {
-    flex: 1,
-  },
-  metaTitulo: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  metaSubtitulo: {
-    fontSize: 15,
-    color: '#4B5563',
-  },
-  badge: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-  },
-  badgeCompleto: {
-    backgroundColor: '#EAF9EC',
-  },
-  badgeIncompleto: {
-    backgroundColor: '#F1F1F1',
-  },
-  badgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  badgeTextCompleto: {
-    color: '#7ED957',
-  },
-  badgeTextIncompleto: {
-    color: '#A3A3A3',
-  },
+  circleSmallText: { fontSize: 16, fontWeight: '700' },
+  metaInfo: { flex: 1 },
+  metaTitulo: { fontSize: 18, fontWeight: '700', color: '#1F2937', marginBottom: 4 },
+  metaSubtitulo: { fontSize: 15, color: '#4B5563' },
+  emptyText: { color: '#6B7280', fontSize: 15, textAlign: 'center', marginTop: 18 },
+  badge: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18 },
+  badgeCompleto: { backgroundColor: '#EAF9EC' },
+  badgeIncompleto: { backgroundColor: '#F1F1F1' },
+  badgeText: { fontSize: 14, fontWeight: '600' },
+  badgeTextCompleto: { color: '#7ED957' },
+  badgeTextIncompleto: { color: '#A3A3A3' },
 });

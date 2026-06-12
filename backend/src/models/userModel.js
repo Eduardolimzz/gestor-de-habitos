@@ -1,15 +1,15 @@
-let users = [];
+const toUser = (user) => {
+  if (!user) return null;
 
-const createUser = (user) => {
-  users.push(user);
-  return user;
-};
-
-const findUserByEmail = (email) => {
-  return users.find(u => u.email === email);
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    password: user.password,
+    createdAt: user.createdAt
+  };
 };
 
 module.exports = {
-  createUser,
-  findUserByEmail
+  toUser
 };
